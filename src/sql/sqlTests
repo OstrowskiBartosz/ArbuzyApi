@@ -1,0 +1,21 @@
+SET NAMES utf8;
+
+INSERT INTO users (userID, firstName, lastName, login, password, email, cityName, streetName, ZIPCode, userType, phoneNumber) VALUES("2", "Krzysztof", "Ibisz", "krzys123", "$2b$10$Dkp/PD/rfidAe7DHD6U7M.fgp6BleFBi1W9l4b9Y6qAJETiPYIwu.", "k.ibisz@gmail.com", "Opole", "Ozimska 215/55", "45-256", 1, "658874452");
+
+INSERT INTO invoices (userID, invoiceDate, netPrice, grossPrice, taxPercentage, cityName, streetName, ZIPCode, VATNumber, companyName) VALUES (2, STR_TO_DATE('02/01/2020 17:25','%d/%m/%Y %H:%i'), 395.69, 486.70, 23, 'Opole', 'Horoszkiewicza 22/4', '45-258', '459-259-25-25', 'Spoldzielnia Aligator');
+INSERT INTO invoiceItems (invoiceID, productID, productName, netPrice, grossPrice, taxPercentage, quantity) VALUES (1, 7, '500 GB 2.5\" SATA II (MQ01ABD050)', 125.08, 153.85, 23, 2);
+INSERT INTO invoiceItems (invoiceID, productID, productName, netPrice, grossPrice, taxPercentage, quantity) VALUES (1, 23, 'UV500 240GB SATA3 (SUV500/240G)', 145.53, 179.00, 23, 1);
+
+INSERT INTO invoices (userID, invoiceDate, netPrice, grossPrice, taxPercentage, name, cityName, streetName, ZIPCode) VALUES (2, STR_TO_DATE('10/01/2020 10:53','%d/%m/%Y %H:%i'), 2257.14, 2776.27, 23, 'Krzysztof Ibisz', 'Wroclaw', 'Koralowa 16b/123',  '65-852');
+INSERT INTO invoiceItems (invoiceID, productID, productName, netPrice, grossPrice, taxPercentage, quantity) VALUES (2, 2, 'P300 2 TB 3.5\" SATA III (HDWD120UZSVA)', 209.75, 257.99, 23, 1);
+INSERT INTO invoiceItems (invoiceID, productID, productName, netPrice, grossPrice, taxPercentage, quantity) VALUES (2, 4, 'Blue 500 GB 2.5\" SATA III (WD5000LPCX)', 142.15, 174.84, 23, 2);
+INSERT INTO invoiceItems (invoiceID, productID, productName, netPrice, grossPrice, taxPercentage, quantity) VALUES (2, 12, 'Barracuda 8 TB 3.5\" SATA III (ST8000DM004)', 688.29, 846.60, 23, 1);
+INSERT INTO invoiceItems (invoiceID, productID, productName, netPrice, grossPrice, taxPercentage, quantity) VALUES (2, 13, 'Barracuda Pro 1 TB 2.5\" SATA III (ST1000LM049)', 214.96, 264.40, 23, 5);
+INSERT INTO invoiceItems (invoiceID, productID, productName, netPrice, grossPrice, taxPercentage, quantity) VALUES (2, 13, 'Barracuda Pro 1 TB 2.5\" SATA III (ST1000LM049)', 214.96, 264.40, 23, 5);
+
+
+INSERT INTO users (userID, firstName, lastName, login, password, email, cityName, streetName, ZIPCode, userType, phoneNumber) VALUES("3", "Bartosz", "Ostrowski", "bartek", "$2b$10$t4Ps9P9gAWlgk90JqjN2o.fhAKp27Mvo5Xf2T1TSQo7toFx/H.rYi", "bartosz.ostrowski@gmail.com", "Opole", "Ozimska 215/55", "45-256", 1, "658874452");
+
+-- INSERT INTO invoices (userID, invoiceDate, netPrice, grossPrice, taxPercentage, cityName, streetName, ZIPCode, VATNumber, companyName) VALUES (3, STR_TO_DATE('02/01/2020 17:25','%d/%m/%Y %H:%i'), 395.69, 486.70, 23, 'Opole', 'Horoszkiewicza 22/4', '45-258', '459-259-25-25', '');
+-- INSERT INTO invoiceItems (invoiceID, productID, productName, netPrice, grossPrice, taxPercentage, quantity) VALUES (3, 7, '500 GB 2.5\" SATA II (MQ01ABD050)', 125.08, 153.85, 23, 2);
+-- INSERT INTO invoiceItems (invoiceID, productID, productName, netPrice, grossPrice, taxPercentage, quantity) VALUES (3, 23, 'UV500 240GB SATA3 (SUV500/240G)', 145.53, 179.00, 23, 1);

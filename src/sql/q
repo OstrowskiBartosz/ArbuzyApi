@@ -1,0 +1,6 @@
+
+source C:/Users/Haxxf/OneDrive/Dokumenty/Projekty/shop/api/src/v1/sql/sqlTables;
+
+source C:/Users/Haxxf/OneDrive/Dokumenty/Projekty/shop/api/src/v1/sql/sqlProducts;
+
+source C:/Users/Haxxf/OneDrive/Dokumenty/Projekty/shop/api/src/v1/sql/sqlTests;
