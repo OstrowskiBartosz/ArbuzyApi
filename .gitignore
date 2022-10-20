@@ -20,6 +20,9 @@
 .env
 .prettierrc
 
+public/images/products/*
+!public/images/products/1
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

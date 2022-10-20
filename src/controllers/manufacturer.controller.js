@@ -1,0 +1,16 @@
+const manufacturerService = require('../services/manufacturer.service');
+
+const getManufacturers = async (req, res) => {
+  try {
+    const { manufacturerName } = req.params;
+    const manufacturer = await manufacturerService.getManufacturers(manufacturerName);
+    const { status, data, message } = manufacturer;
+    res.status(status).send(JSON.stringify({ data: data, message: message }));
+  } catch (e) {
+    res.status(400).send(JSON.stringify({ data: null, message: e.message }));
+  }
+};
+
+module.exports = {
+  getManufacturers
+};

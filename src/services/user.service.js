@@ -1,7 +1,6 @@
-const generatePasswordHash = require('../utilFunctions/generatePasswordHash');
+const generatePasswordHash = require('../util/user/generatePasswordHash');
 const db = require('../models');
 const { User } = db;
-// const generatePasswordHash = require('../utilFunctions/generatePasswordHash');
 
 const getUser = async (userSession) => {
   try {

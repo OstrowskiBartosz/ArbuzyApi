@@ -7,7 +7,7 @@ const createSession = async (req, res) => {
       const session = req.session;
       const createSession = await sessionService.createSession(session, login, password);
       const { status, data, message } = createSession;
-      res.status(status).send({ data: data, message: message });
+      res.status(status).send(JSON.stringify({ data: data, message: message }));
     } else {
       res.status(400).send(JSON.stringify({ message: 'No requested data.' }));
     }
@@ -27,7 +27,7 @@ const getSession = async (req, res) => {
         res.status(status).send({ data: data, message: message });
       } else {
         res.clearCookie('user_sid');
-        res.status(status).send({ data: data, message: message });
+        res.status(status).send(JSON.stringify({ data: data, message: message }));
       }
     } else res.send(JSON.stringify({ status: 400, message: 'No requested data.' }));
   } catch (e) {
@@ -43,7 +43,7 @@ const deleteSession = async (req, res) => {
       const deleteSession = await sessionService.deleteSession(session, userSIDCookie);
       const { status, data, message } = deleteSession;
       res.clearCookie('user_sid');
-      res.status(status).send({ data: data, message: message });
+      res.status(status).send(JSON.stringify({ data: data, message: message }));
     } else res.status(400).send(JSON.stringify({ message: 'No requested data.' }));
   } catch (e) {
     res.send(JSON.stringify({ status: 400, message: e.message }));

@@ -1,90 +1,60 @@
-var express = require('express');
-var path = require('path');
-var logger = require('morgan');
+const express = require('express');
+const logger = require('morgan');
+const path = require('path');
+const createError = require('http-errors');
+const cors = require('cors');
+const session = require('express-session');
+const MySQLStore = require('express-mysql-session')(session);
+const dotenv = require('dotenv').config({ path: `${__dirname}/.env` });
 
-var createError = require('http-errors');
-var cors = require('cors');
-var session = require('express-session');
-var MySQLStore = require('express-mysql-session')(session);
+const userRouter = require('./src/routes/user.route');
+const sessionRouter = require('./src/routes/session.route');
+const productRouter = require('./src/routes/product.route');
+const manufacturerRouter = require('./src/routes/manufacturer.route');
+const categoryRouter = require('./src/routes/category.route');
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-var loginRouter = require('./routes/login');
-var logoutRouter = require('./routes/logout');
-var sessionRouter = require('./routes/session');
-var searchRouter = require('./routes/search');
-// var addToCartRouter = require("./routes/addtocart");
-var CartRouter = require('./routes/cart');
-// var cartQuantity = require("./routes/cartQuantity");
-var profileOrders = require('./routes/profileOrders');
-var invoice = require('./routes/invoice');
-var product = require('./routes/product');
-var buy = require('./routes/buy');
-var summary = require('./routes/summary');
-var deleteUser = require('./routes/deleteUser');
-var updateUser = require('./routes/updateUser');
+const app = express();
 
-const searchHints = require('./routes/searchHints');
+const db = require('./src/models');
+db.sequelize
+  .sync({})
+  .then(() => {})
+  .catch((err) => {});
 
-var app = express();
+app.use(cors({ origin: 'http://localhost:3000', allowCredentials: true, credentials: true }));
 
-app.use(
-  cors({
-    origin: 'http://localhost:3000',
-    allowCredentials: true,
-    credentials: true
-  })
-);
-
-var Storeoptions = {
-  host: 'localhost',
-  user: 'root',
-  password: 'root',
-  database: 'shop_db'
+const Storeoptions = {
+  host: process.env.DATABASE_HOST,
+  user: process.env.USER_NAME,
+  password: process.env.DATABASE_PASSWORD,
+  database: process.env.DATABASE_NANE
 };
-var sessionStore = new MySQLStore(Storeoptions);
+
+const sessionStore = new MySQLStore(Storeoptions);
 app.use(
   session({
-    key: 'user_sid',
-    secret: 'idealpancake',
+    key: process.env.DATABASE_SESSION_KEY,
+    secret: process.env.DATABASE_SESSION_SECRET,
     store: sessionStore,
     saveUninitialized: false,
     resave: false,
-    cookie: {
-      maxAge: 1000 * 60 * 60 * 2,
-      httpOnly: false
-    }
+    cookie: { maxAge: 1000 * 60 * 60 * 2, httpOnly: false }
   })
 );
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
-
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
-app.use('/login', loginRouter);
-app.use('/logout', logoutRouter);
+app.use('/user', userRouter);
 app.use('/session', sessionRouter);
-app.use('/search', searchRouter);
-app.use('/search', searchRouter);
-// app.use('/addtocart', addToCartRouter);
-app.use('/cart', CartRouter);
-// app.use('/cartQuantity', cartQuantity);
-app.use('/profileOrders', profileOrders);
-app.use('/invoice', invoice);
-app.use('/product', product);
-app.use('/buy', buy);
-app.use('/summary', summary);
-app.use('/deleteUser', deleteUser);
-app.use('/updateUser', updateUser);
-app.use('/searchHints', searchHints);
+app.use('/category', categoryRouter);
+app.use('/manufacturer', manufacturerRouter);
+app.use('/product', productRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -95,7 +65,6 @@ app.use(function (err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
-
   // render the error page
   res.status(err.status || 500);
   res.render('error');
