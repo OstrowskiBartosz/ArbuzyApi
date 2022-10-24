@@ -12,6 +12,8 @@ const sessionRouter = require('./src/routes/session.route');
 const productRouter = require('./src/routes/product.route');
 const manufacturerRouter = require('./src/routes/manufacturer.route');
 const categoryRouter = require('./src/routes/category.route');
+const cartRouter = require('./src/routes/cart.route');
+const cartItemRouter = require('./src/routes/cartItem.route');
 
 const app = express();
 
@@ -29,8 +31,8 @@ const Storeoptions = {
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE_NANE
 };
-
 const sessionStore = new MySQLStore(Storeoptions);
+
 app.use(
   session({
     key: process.env.DATABASE_SESSION_KEY,
@@ -55,6 +57,8 @@ app.use('/session', sessionRouter);
 app.use('/category', categoryRouter);
 app.use('/manufacturer', manufacturerRouter);
 app.use('/product', productRouter);
+app.use('/cart', cartRouter);
+app.use('/cartItem', cartItemRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

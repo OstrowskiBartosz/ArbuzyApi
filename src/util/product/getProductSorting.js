@@ -1,3 +1,6 @@
+const db = require('../../models');
+const { Price } = db;
+
 module.exports = getProductSorting = (sortQuery) => {
   const sort = sortQuery ? sortQuery : 'domyślne';
   switch (sort) {

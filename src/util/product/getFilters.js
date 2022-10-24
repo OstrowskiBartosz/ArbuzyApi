@@ -18,7 +18,9 @@ const getAttributeFilters = (queryParams) => {
       key !== 'w' &&
       key !== 'url' &&
       key !== 'filterCategory' &&
-      key !== 'filterManufacturer'
+      key !== 'filterManufacturer' &&
+      key !== 'priceFrom' &&
+      key !== 'priceTo'
     ) {
       const groupF = 'group_F';
       const valueF = 'value_F';
@@ -35,7 +37,15 @@ const getAttributeFilters = (queryParams) => {
   return attr;
 };
 
+const getPriceRange = (queryParams) => {
+  const priceFrom = queryParams['priceFrom'] ?? null;
+  const priceTo = queryParams['priceTo'] ?? null;
+  if (priceFrom) return { priceFrom: priceFrom, priceTo: priceTo };
+  else return {};
+};
+
 module.exports = {
   getArrayFilters,
-  getAttributeFilters
+  getAttributeFilters,
+  getPriceRange
 };
