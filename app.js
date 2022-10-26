@@ -14,6 +14,7 @@ const manufacturerRouter = require('./src/routes/manufacturer.route');
 const categoryRouter = require('./src/routes/category.route');
 const cartRouter = require('./src/routes/cart.route');
 const cartItemRouter = require('./src/routes/cartItem.route');
+const invoiceouter = require('./src/routes/invoice.route');
 
 const app = express();
 
@@ -59,6 +60,7 @@ app.use('/manufacturer', manufacturerRouter);
 app.use('/product', productRouter);
 app.use('/cart', cartRouter);
 app.use('/cartItem', cartItemRouter);
+app.use('/invoice', invoiceouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

@@ -88,12 +88,14 @@ CREATE TABLE invoices(
   netPrice FLOAT(7,2) NOT NULL,
   grossPrice FLOAT(7,2) NOT NULL,
   taxPercentage FLOAT(7,2) NOT NULL,
+  status VARCHAR(100) NOT NULL,
   name VARCHAR(50),
   cityName VARCHAR(50) NOT NULL,
   streetName VARCHAR(50) NOT NULL,
   ZIPCode VARCHAR(6) NOT NULL,
   VATNumber VARCHAR(20),
   companyName VARCHAR(100),
+  CONSTRAINT CHK_Status CHECK (status='W trakcie' OR status='Zrealizowane' OR status='Anulowane'),
   FOREIGN KEY (userID) REFERENCES users(userID) ON DELETE CASCADE
 );
 

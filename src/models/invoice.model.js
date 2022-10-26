@@ -31,6 +31,17 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false
       },
+      status: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+        validate: {
+          customValidator(value) {
+            if (value !== 'W trakcie' && value !== 'Zrealizowane' && value !== 'Anulowane') {
+              throw new Error('status can only be one of three predefined values');
+            }
+          }
+        }
+      },
       name: {
         type: DataTypes.STRING(50),
         allowNull: false
