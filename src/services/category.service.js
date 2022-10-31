@@ -9,7 +9,7 @@ const getCategories = async (categoryName) => {
     });
     return { status: 200, data: category, message: 'Category retrieved.' };
   } catch (e) {
-    throw Error(e);
+    return { status: 500, data: [], message: e.message };
   }
 };
 

@@ -9,7 +9,7 @@ const getManufacturers = async (manufacturerName) => {
     });
     return { status: 200, data: manufacturer, message: 'Manufacturer retrieved.' };
   } catch (e) {
-    throw Error(e);
+    return { status: 500, data: [], message: e.message };
   }
 };
 

@@ -24,7 +24,7 @@ const getUser = async (userSession) => {
     });
     return { status: 200, data: userData, message: 'Successfully user retrieved data.' };
   } catch (e) {
-    throw Error(e);
+    return { status: 500, data: [], message: e.message };
   }
 };
 
@@ -55,7 +55,7 @@ const createUser = async (userData, session) => {
       return { status: 200, data: [], message: 'User with that login or email already exists.' };
     }
   } catch (e) {
-    throw Error(e);
+    return { status: 500, data: [], message: e.message };
   }
 };
 
@@ -78,7 +78,7 @@ const updateUser = async (userSession, userData) => {
     );
     return { status: 200, data: [], message: 'User has been updated.' };
   } catch (e) {
-    throw Error(e);
+    return { status: 500, data: [], message: e.message };
   }
 };
 
@@ -91,7 +91,7 @@ const deleteUser = async (userSession, session) => {
     session.destroy();
     return { status: 200, data: [], message: 'User has been deleted.' };
   } catch (e) {
-    throw Error(e);
+    return { status: 500, data: [], message: e.message };
   }
 };
 

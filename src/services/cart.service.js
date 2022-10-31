@@ -13,7 +13,7 @@ const getCartItemsNumber = async (session) => {
       message: 'Cart found.'
     };
   } catch (e) {
-    throw Error(e);
+    return { status: 500, data: [], message: e.message };
   }
 };
 
@@ -63,7 +63,7 @@ const getCart = async (session) => {
 
     return { status: 200, data: { cartData: cart, cartItemsData: cartItems }, message: 'Success.' };
   } catch (e) {
-    throw Error(e);
+    return { status: 500, data: [], message: e.message };
   }
 };
 
@@ -75,7 +75,7 @@ const deleteCart = async (session, cartID) => {
     const cartDeleted = await Cart.destroy({ where: { cartID: cartID } });
     return { status: 200, data: [], message: 'Cart has been deleted.' };
   } catch (e) {
-    throw Error(e);
+    return { status: 500, data: [], message: e.message };
   }
 };
 

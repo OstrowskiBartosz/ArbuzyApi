@@ -3,6 +3,8 @@ const categoryService = require('../services/category.service');
 const getCategories = async (req, res) => {
   try {
     const { categoryName } = req.params;
+    if (!categoryName) return res.status(400).send(JSON.stringify({ message: 'No req data.' }));
+
     const category = await categoryService.getCategories(categoryName);
     const { status, data, message } = category;
     res.status(status).send(JSON.stringify({ data: data, message: message }));

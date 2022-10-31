@@ -47,8 +47,10 @@ const postInvoice = async (req, res) => {
   try {
     const { login: session } = req.session;
     if (!session) return res.status(401).send(JSON.stringify({ message: 'No active session.' }));
+    const { paymentMethod } = req.body;
+    if (!paymentMethod) return res.status(401).send(JSON.stringify({ message: 'No req data.' }));
 
-    const invoice = await invoiceService.postInvoice(session);
+    const invoice = await invoiceService.postInvoice(session, paymentMethod);
     const { status, data, message } = invoice;
     res.status(status).send(JSON.stringify({ data: data, message: message }));
   } catch (e) {

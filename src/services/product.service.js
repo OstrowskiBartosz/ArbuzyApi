@@ -22,7 +22,7 @@ const getProduct = async (productID) => {
     });
     return { status: 200, data: product, message: 'Product retrieved' };
   } catch (e) {
-    throw Error(e);
+    return { status: 500, data: [], message: e.message };
   }
 };
 
@@ -321,7 +321,7 @@ const getProducts = async (productName, query, url) => {
       message: 'Product retrieved'
     };
   } catch (e) {
-    throw Error(e);
+    return { status: 500, data: [], message: e.message };
   }
 };
 
@@ -369,7 +369,7 @@ const getMostBoughtProducts = async (period) => {
     });
     return { status: 200, data: product, message: 'Product retrieved' };
   } catch (e) {
-    throw Error(e);
+    return { status: 500, data: [], message: e.message };
   }
 };
 
@@ -431,7 +431,7 @@ const getMostBoughtCategoryProducts = async () => {
     });
     return { status: 200, data: product, message: 'Product retrieved' };
   } catch (e) {
-    throw Error(e);
+    return { status: 500, data: [], message: e.message };
   }
 };
 
@@ -465,7 +465,7 @@ const getYouMayLikeThisProducts = async () => {
     });
     return { status: 200, data: product, message: 'Product retrieved' };
   } catch (e) {
-    throw Error(e);
+    return { status: 500, data: [], message: e.message };
   }
 };
 

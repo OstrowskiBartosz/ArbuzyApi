@@ -2,7 +2,7 @@ const userService = require('../services/user.service');
 
 const getUser = async (req, res) => {
   try {
-    const session = req.session.login ?? null;
+    const { login: session } = req.session;
     if (!session) return res.status(401).send(JSON.stringify({ message: 'No active session.' }));
 
     const user = await userService.getUser(session);
@@ -16,7 +16,7 @@ const getUser = async (req, res) => {
 const createUser = async (req, res) => {
   try {
     const session = req.session;
-    const userData = req.body ?? null;
+    const userData = req.body;
     if (!userData) return res.status(401).send(JSON.stringify({ message: 'No req data.' }));
 
     const user = await userService.createUser(userData, session);
@@ -29,9 +29,9 @@ const createUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
   try {
-    const session = req.session.login ?? null;
+    const { login: session } = req.session;
     if (!session) return res.status(401).send(JSON.stringify({ message: 'No active session.' }));
-    const userData = req.body ?? null;
+    const userData = req.body;
     if (!userData) return res.status(401).send(JSON.stringify({ message: 'No req data.' }));
 
     const user = await userService.updateUser(session, userData);
@@ -44,7 +44,7 @@ const updateUser = async (req, res) => {
 
 const deleteUser = async (req, res) => {
   try {
-    const session = req.session.login ?? null;
+    const { login: session } = req.session;
     if (!session) return res.status(401).send(JSON.stringify({ message: 'No active session.' }));
     const sessionData = req.session;
 

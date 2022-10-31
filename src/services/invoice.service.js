@@ -12,7 +12,7 @@ const getInvoices = async (userSession) => {
     });
     return { status: 200, data: invoice, message: 'Success.' };
   } catch (e) {
-    throw Error(e);
+    return { status: 500, data: [], message: e.message };
   }
 };
 
@@ -62,7 +62,7 @@ const getInvoice = async (userSession, invoiceID) => {
     });
     return { status: 200, data: invoice, message: 'Success.' };
   } catch (e) {
-    throw Error(e);
+    return { status: 500, data: [], message: e.message };
   }
 };
 
@@ -76,10 +76,10 @@ const updateInvoice = async (userSession, invoiceID) => {
       where: { userID: user.userID, invoiceID: invoiceID }
     });
 
-    if (invoice.status === 'W trakcie') {
+    if (invoice.status === 'Pending') {
       const updateInvoice = await Invoice.update(
         {
-          status: 'Anulowane'
+          status: 'Cancelled'
         },
         { where: { userID: user.userID, invoiceID: invoiceID } }
       );
@@ -88,11 +88,11 @@ const updateInvoice = async (userSession, invoiceID) => {
       return { status: 400, data: [], message: "Can't cancel this order." };
     }
   } catch (e) {
-    throw Error(e);
+    return { status: 500, data: [], message: e.message };
   }
 };
 
-const postInvoice = async (userSession) => {
+const postInvoice = async (userSession, paymentMethod) => {
   const user = await User.findOne({ where: { login: userSession } });
   if (user === null) return { status: 401, data: [], message: 'No active session.' };
 
@@ -116,7 +116,8 @@ const postInvoice = async (userSession) => {
       netPrice: cart.totalPriceOfProducts * 0.77,
       grossPrice: cart.totalPriceOfProducts,
       taxPercentage: 23,
-      status: 'W trakcie',
+      paymentMethod: paymentMethod,
+      status: 'Pending',
       name: `${user.firstName} ${user.lastName}`,
       cityName: user.cityName,
       streetName: user.streetName,
@@ -158,7 +159,7 @@ const postInvoice = async (userSession) => {
     };
   } catch (e) {
     await t.rollback();
-    throw Error(e);
+    return { status: 500, data: [], message: e.message };
   }
 };
 

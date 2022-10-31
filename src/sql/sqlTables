@@ -89,13 +89,15 @@ CREATE TABLE invoices(
   grossPrice FLOAT(7,2) NOT NULL,
   taxPercentage FLOAT(7,2) NOT NULL,
   status VARCHAR(100) NOT NULL,
+  paymentMethod VARCHAR(50),
   name VARCHAR(50),
   cityName VARCHAR(50) NOT NULL,
   streetName VARCHAR(50) NOT NULL,
   ZIPCode VARCHAR(6) NOT NULL,
   VATNumber VARCHAR(20),
   companyName VARCHAR(100),
-  CONSTRAINT CHK_Status CHECK (status='W trakcie' OR status='Zrealizowane' OR status='Anulowane'),
+  CONSTRAINT CHK_PaymentMethod CHECK (paymentMethod='Credit card' OR paymentMethod='Cash' OR paymentMethod='Paypal' OR paymentMethod="PayU"),
+  CONSTRAINT CHK_Status CHECK (status='Pending' OR status='Completed' OR status='Cancelled'),
   FOREIGN KEY (userID) REFERENCES users(userID) ON DELETE CASCADE
 );
 

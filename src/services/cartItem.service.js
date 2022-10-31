@@ -63,7 +63,7 @@ const postCartItem = async (session, productID) => {
       return { status: 200, data: [], message: 'Quantity limit.' };
     }
   } catch (e) {
-    throw Error(e);
+    return { status: 500, data: [], message: e.message };
   }
 };
 
@@ -98,7 +98,7 @@ const deleteCartItem = async (session, cartItemID) => {
 
     return { status: 200, data: [], message: 'Product has been removed from the cart.' };
   } catch (e) {
-    throw Error(e);
+    return { status: 500, data: [], message: e.message };
   }
 };
 
@@ -154,7 +154,7 @@ const updateCartItem = async (session, cartItemID, operationSign) => {
     }
     return { status: 200, data: [], message: 'Quantity limit.' };
   } catch (e) {
-    throw Error(e);
+    return { status: 500, data: [], message: e.message };
   }
 };
 

@@ -31,12 +31,28 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false
       },
+      paymentMethod: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+        validate: {
+          customValidator(value) {
+            if (
+              value !== 'Credit card' &&
+              value !== 'Cash' &&
+              value !== 'Paypal' &&
+              value !== 'PayU'
+            ) {
+              throw new Error('paymentMethod can only be one of four predefined values');
+            }
+          }
+        }
+      },
       status: {
         type: DataTypes.STRING(100),
         allowNull: false,
         validate: {
           customValidator(value) {
-            if (value !== 'W trakcie' && value !== 'Zrealizowane' && value !== 'Anulowane') {
+            if (value !== 'Pending' && value !== 'Completed' && value !== 'Cancelled') {
               throw new Error('status can only be one of three predefined values');
             }
           }

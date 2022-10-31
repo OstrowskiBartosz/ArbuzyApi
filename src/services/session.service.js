@@ -13,7 +13,7 @@ const createSession = async (session, login, password) => {
       } else return { status: 200, data: [], message: 'Wrong combination of login and password.' };
     } else return { status: 200, data: [], message: 'Wrong combination of login and password.' };
   } catch (e) {
-    throw Error(e);
+    return { status: 500, data: [], message: e.message };
   }
 };
 
@@ -28,7 +28,7 @@ const getSession = async (session, userSIDCookie) => {
       return { status: 200, data: [], message: 'Not logged.' };
     }
   } catch (e) {
-    throw Error(e);
+    return { status: 500, data: [], message: e.message };
   }
 };
 
@@ -39,7 +39,7 @@ const deleteSession = async (session, userIDCookie) => {
       return { status: 200, data: [], message: 'Logged out.' };
     } else return { status: 200, data: [], message: 'Logged out.' };
   } catch (e) {
-    throw Error(e);
+    return { status: 500, data: [], message: e.message };
   }
 };
 

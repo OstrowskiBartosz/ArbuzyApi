@@ -2,7 +2,7 @@ const cartService = require('../services/cart.service');
 
 const getCartItemsNumber = async (req, res) => {
   try {
-    const session = req.session.login ?? null;
+    const { login: session } = req.session;
     if (!session) return res.status(401).send(JSON.stringify({ message: 'No active session.' }));
 
     const cart = await cartService.getCartItemsNumber(session);
@@ -15,7 +15,7 @@ const getCartItemsNumber = async (req, res) => {
 
 const getCart = async (req, res) => {
   try {
-    const session = req.session.login ?? null;
+    const { login: session } = req.session;
     if (!session) return res.status(401).send(JSON.stringify({ message: 'No active session.' }));
 
     const cart = await cartService.getCart(session);
@@ -28,9 +28,9 @@ const getCart = async (req, res) => {
 
 const deleteCart = async (req, res) => {
   try {
-    const session = req.session.login ?? null;
+    const { login: session } = req.session;
     if (!session) return res.status(401).send(JSON.stringify({ message: 'No active session.' }));
-    const cartID = req.params.cartID ?? null;
+    const { cartID } = req.params;
     if (!cartID) return res.status(400).send(JSON.stringify({ message: 'No cartID data.' }));
 
     const cart = await cartService.deleteCart(session, cartID);
