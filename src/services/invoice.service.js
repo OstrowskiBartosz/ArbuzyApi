@@ -21,7 +21,7 @@ const getInvoice = async (userSession, invoiceID) => {
     const user = await User.findOne({ where: { login: userSession } });
     if (user === null) return { status: 401, data: [], message: 'No active session.' };
 
-    const invoice = await Invoice.findAll({
+    const invoice = await Invoice.findOne({
       attributes: { exclude: ['userID', 'taxPercentage'] },
       include: [
         {
@@ -60,7 +60,8 @@ const getInvoice = async (userSession, invoiceID) => {
       ],
       where: { userID: user.userID, invoiceID: invoiceID }
     });
-    return { status: 200, data: invoice, message: 'Success.' };
+    if (invoice) return { status: 200, data: invoice, message: 'Success.' };
+    else return { status: 400, data: invoice, message: "Didn't find such invoice." };
   } catch (e) {
     return { status: 500, data: [], message: e.message };
   }

@@ -10,16 +10,7 @@ const getUser = async (userSession) => {
     const userData = await User.findOne({
       where: { userID: user.userID },
       attributes: {
-        exclude: [
-          'userID',
-          'login',
-          'password',
-          'email',
-          'userType',
-          'phoneNumber',
-          'comment',
-          'VATNumber'
-        ]
+        exclude: ['userID', 'password', 'userType', 'phoneNumber', 'comment', 'VATNumber']
       }
     });
     return { status: 200, data: userData, message: 'Successfully user retrieved data.' };
