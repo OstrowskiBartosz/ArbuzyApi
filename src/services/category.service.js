@@ -13,6 +13,18 @@ const getCategories = async (categoryName) => {
   }
 };
 
+const getCategoryHints = async (categoryName) => {
+  try {
+    const categoryHints = await Category.findAll({
+      where: { categoryName: { [Op.like]: `%${categoryName}%` } }
+    });
+    return { status: 200, data: categoryHints, message: 'Category retrieved.' };
+  } catch (e) {
+    return { status: 500, data: [], message: e.message };
+  }
+};
+
 module.exports = {
-  getCategories
+  getCategories,
+  getCategoryHints
 };

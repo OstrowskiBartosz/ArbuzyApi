@@ -325,6 +325,25 @@ const getProducts = async (productName, query, url) => {
   }
 };
 
+const getProductHints = async (productName) => {
+  try {
+    const product = await Product.findAll({
+      as: 'Product',
+      attributes: { exclude: ['description', 'categoryID', 'manufacturerID', 'quantity'] },
+      where: { productName: { [Op.like]: `%${productName}%` } }
+    });
+    return {
+      status: 200,
+      data: {
+        product
+      },
+      message: 'Product hints retrieved.'
+    };
+  } catch (e) {
+    return { status: 500, data: [], message: e.message };
+  }
+};
+
 const getMostBoughtProducts = async (period) => {
   try {
     const product = await Product.findAll({
@@ -472,6 +491,7 @@ const getYouMayLikeThisProducts = async () => {
 module.exports = {
   getProduct,
   getProducts,
+  getProductHints,
   getMostBoughtProducts,
   getMostBoughtCategoryProducts,
   getYouMayLikeThisProducts

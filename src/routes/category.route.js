@@ -5,4 +5,6 @@ const router = express.Router();
 
 router.get('/categoryName/:categoryName', categoryController.getCategories);
 
+router.get('/categoryHints/:categoryName', categoryController.getCategories);
+
 module.exports = router;

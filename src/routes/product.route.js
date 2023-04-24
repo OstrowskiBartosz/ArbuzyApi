@@ -9,6 +9,8 @@ router.get('/mostBoughtCategoryProducts', productController.getMostBoughtCategor
 
 router.get('/youMayLikeThisProducts', productController.getYouMayLikeThisProducts);
 
+router.get('/productHints/:productName?', productController.getProductHints);
+
 router.get('/productName/:productName?', productController.getProducts);
 
 router.get('/:productID', productController.getProduct);

@@ -25,6 +25,17 @@ const getProducts = async (req, res) => {
   }
 };
 
+const getProductHints = async (req, res) => {
+  try {
+    const productName = req.params.productName ?? '';
+    const product = await productService.getProductHints(productName);
+    const { status, data, message } = product;
+    res.status(status).send(JSON.stringify({ data: data, message: message }));
+  } catch (e) {
+    res.status(400).send(JSON.stringify({ data: null, message: e.message }));
+  }
+};
+
 const getMostBoughtProducts = async (req, res) => {
   try {
     const product = await productService.getMostBoughtProducts();
@@ -58,6 +69,7 @@ const getYouMayLikeThisProducts = async (req, res) => {
 module.exports = {
   getProduct,
   getProducts,
+  getProductHints,
   getMostBoughtProducts,
   getMostBoughtCategoryProducts,
   getYouMayLikeThisProducts
