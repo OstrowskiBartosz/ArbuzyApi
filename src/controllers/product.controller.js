@@ -36,33 +36,13 @@ const getProductHints = async (req, res) => {
   }
 };
 
-const getMostBoughtProducts = async (req, res) => {
+const getFrontPageProducts = async (req, res) => {
   try {
-    const product = await productService.getMostBoughtProducts();
+    const product = await productService.getFrontPageProducts();
     const { status, data, message } = product;
     res.status(status).send(JSON.stringify({ data: data, message: message }));
   } catch (e) {
-    res.status(400).send(JSON.stringify({ data: null, message: e.message }));
-  }
-};
-
-const getMostBoughtCategoryProducts = async (req, res) => {
-  try {
-    const product = await productService.getMostBoughtCategoryProducts();
-    const { status, data, message } = product;
-    res.status(status).send(JSON.stringify({ data: data, message: message }));
-  } catch (e) {
-    res.status(400).send(JSON.stringify({ data: null, message: e.message }));
-  }
-};
-
-const getYouMayLikeThisProducts = async (req, res) => {
-  try {
-    const product = await productService.getYouMayLikeThisProducts();
-    const { status, data, message } = product;
-    res.status(status).send(JSON.stringify({ data: data, message: message }));
-  } catch (e) {
-    res.status(400).send(JSON.stringify({ data: null, message: e.message }));
+    res.status(400).send(JSON.stringify({ data: data, message: e.message }));
   }
 };
 
@@ -70,7 +50,5 @@ module.exports = {
   getProduct,
   getProducts,
   getProductHints,
-  getMostBoughtProducts,
-  getMostBoughtCategoryProducts,
-  getYouMayLikeThisProducts
+  getFrontPageProducts
 };

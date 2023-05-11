@@ -386,7 +386,7 @@ const getMostBoughtProducts = async (period) => {
       order: [[db.sequelize.literal('productsCount'), 'DESC']],
       limit: 6
     });
-    return { status: 200, data: product, message: 'Product retrieved' };
+    return product;
   } catch (e) {
     return { status: 500, data: [], message: e.message };
   }
@@ -448,7 +448,8 @@ const getMostBoughtCategoryProducts = async () => {
       order: [[db.sequelize.literal('productsCount'), 'DESC']],
       limit: 6
     });
-    return { status: 200, data: product, message: 'Product retrieved' };
+    return product;
+    // return { status: 200, data: product, message: 'Product retrieved' };
   } catch (e) {
     return { status: 500, data: [], message: e.message };
   }
@@ -482,7 +483,42 @@ const getYouMayLikeThisProducts = async () => {
       limit: 6,
       order: sequelize.random()
     });
-    return { status: 200, data: product, message: 'Product retrieved' };
+    return product;
+    // return { status: 200, data: product, message: 'Product retrieved' };
+  } catch (e) {
+    return { status: 500, data: [], message: e.message };
+  }
+};
+
+const getFrontPageProducts = async () => {
+  try {
+    const productDataWeekly = {
+      Attributes: [{ value: '/images/products/13/1695259_2_i1064.jpg' }],
+      Manufacturer: { manufacturerName: 'Seagate' },
+      Prices: [{ grossPrice: 264.4, promoPrice: 235.2 }],
+      productID: 13,
+      productName: 'Barracuda Pro 1 TB 2.5" SATA III (ST1000LM049)',
+      productsCount: 0
+    };
+    const productDataDaily = {
+      Attributes: [{ value: '/images/products/13/1695259_2_i1064.jpg' }],
+      Manufacturer: { manufacturerName: 'Seagate' },
+      Prices: [{ grossPrice: 264.4, promoPrice: 235.2 }],
+      productID: 13,
+      productName: 'Barracuda Pro 1 TB 2.5" SATA III (ST1000LM049)',
+      productsCount: 2
+    };
+    const promoProducts = {
+      productDataDaily: productDataDaily,
+      productDataWeekly: productDataWeekly
+    };
+    const products = await {
+      youMayLikeProducts: await getYouMayLikeThisProducts(),
+      mostBoughtCategoryProducts: await getMostBoughtCategoryProducts(),
+      mostBoughtProducts: await getMostBoughtProducts(),
+      promoProducts: promoProducts
+    };
+    return { status: 200, data: products, message: 'Products retrieved.' };
   } catch (e) {
     return { status: 500, data: [], message: e.message };
   }
@@ -492,7 +528,5 @@ module.exports = {
   getProduct,
   getProducts,
   getProductHints,
-  getMostBoughtProducts,
-  getMostBoughtCategoryProducts,
-  getYouMayLikeThisProducts
+  getFrontPageProducts
 };
