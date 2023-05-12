@@ -34,6 +34,16 @@ module.exports = (sequelize, DataTypes) => {
       description: {
         type: DataTypes.STRING(5000),
         allowNull: false
+      },
+      dailyPromo: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
+      },
+      weeklyPromo: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
       }
     },
     {

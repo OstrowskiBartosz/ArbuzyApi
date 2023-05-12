@@ -29,11 +29,11 @@ module.exports = (sequelize, DataTypes) => {
       },
       fromDate: {
         type: DataTypes.DATEONLY,
-        allowNull: false
+        allowNull: true
       },
       toDate: {
         type: DataTypes.DATEONLY,
-        allowNull: false
+        allowNull: true
       }
     },
     {

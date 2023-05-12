@@ -39,6 +39,8 @@ CREATE TABLE products(
   quantity INT NOT NULL,
   productName VARCHAR(150) NOT NULL,
   description VARCHAR(5000) NOT NULL,
+  dailyPromo BOOLEAN NOT NULL,
+  weeklyPromo BOOLEAN NOT NULL,
   FOREIGN KEY (categoryID) REFERENCES categories(categoryID),
   FOREIGN KEY (manufacturerID) REFERENCES manufacturers(manufacturerID)
 );
@@ -58,8 +60,8 @@ CREATE TABLE prices(
   netPrice FLOAT(7,2) NOT NULL,
   grossPrice FLOAT(7,2) NOT NULL,
   taxPercentage INT NOT NULL,
-  fromDate DATETIME NOT NULL,
-  toDate DATETIME NOT NULL,
+  fromDate DATETIME,
+  toDate DATETIME,
   FOREIGN KEY (productID) REFERENCES products(productID)
 );
 
