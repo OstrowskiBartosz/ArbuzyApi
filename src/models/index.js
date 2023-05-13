@@ -1,13 +1,7 @@
 const { Sequelize, DataTypes } = require('sequelize');
-const dotenv = require('dotenv').config({ path: `../../../${__dirname}/.env` });
+const dotenv = require('dotenv').config({ path: `${__dirname}/./../../.env` });
 
-// const { S_DB_HOST, S_DB_USER, S_DB_PASSWORD, S_DB_NAME, S_DB_DIALECT } = process.env;
-
-const S_DB_HOST = 'localhost';
-const S_DB_USER = 'root';
-const S_DB_PASSWORD = 'root';
-const S_DB_NAME = 'shop_db1';
-const S_DB_DIALECT = 'mysql';
+const { S_DB_HOST, S_DB_USER, S_DB_PASSWORD, S_DB_NAME, S_DB_DIALECT } = process.env;
 
 const config = {
   host: S_DB_HOST,

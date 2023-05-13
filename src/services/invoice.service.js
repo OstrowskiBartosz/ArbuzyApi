@@ -97,7 +97,7 @@ const postInvoice = async (userSession, paymentMethod) => {
   const user = await User.findOne({ where: { login: userSession } });
   if (user === null) return { status: 401, data: [], message: 'No active session.' };
 
-  const t = await db.sequelize.transaction();
+  const transaction = await db.sequelize.transaction();
 
   try {
     const cart = await Cart.findOne({ where: { userID: user.userID } });
@@ -159,7 +159,7 @@ const postInvoice = async (userSession, paymentMethod) => {
       message: 'Items have been bought.'
     };
   } catch (e) {
-    await t.rollback();
+    await transaction.rollback();
     return { status: 500, data: [], message: e.message };
   }
 };
