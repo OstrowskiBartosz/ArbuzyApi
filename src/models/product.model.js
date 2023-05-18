@@ -35,15 +35,15 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(5000),
         allowNull: false
       },
-      dailyPromo: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue: false
+      promotionName: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+        defaultValue: null
       },
-      weeklyPromo: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue: false
+      promotionDiscount: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: null
       }
     },
     {

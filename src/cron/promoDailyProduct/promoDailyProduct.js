@@ -4,6 +4,7 @@ const { Product, Price, sequelize } = db;
 
 const newDailyPromo = async () => {
   const transaction = await db.sequelize.transaction();
+  console.log('kekw');
   try {
     const product = await Product.findOne({
       include: [{ model: Price }],
@@ -12,18 +13,18 @@ const newDailyPromo = async () => {
     });
     const price = await Price.create({
       productID: product.productID,
-      netPrice: product.Prices[0].grossPrice * 0.9 * 0.77,
-      grossPrice: product.Prices[0].grossPrice * 0.9,
+      netPrice: product.Prices[0].grossPrice * 0.8 * 0.77,
+      grossPrice: product.Prices[0].grossPrice * 0.8,
       taxPercentage: 23,
       fromDate: new Date(),
       toDate: new Date()
     });
     const oldPromoTagUpdate = Product.update(
-      { dailyPromo: false },
-      { where: { dailyPromo: true } }
+      { promotionName: null, promotionDiscount: null },
+      { where: { promotionName: 'dailyPromo' } }
     );
     const newPromoTagUpdate = Product.update(
-      { dailyPromo: true },
+      { promotionName: 'dailyPromo', promotionDiscount: 20 },
       { where: { productId: product.productID } }
     );
   } catch (e) {

@@ -39,8 +39,8 @@ CREATE TABLE products(
   quantity INT NOT NULL,
   productName VARCHAR(150) NOT NULL,
   description VARCHAR(5000) NOT NULL,
-  dailyPromo BOOLEAN NOT NULL,
-  weeklyPromo BOOLEAN NOT NULL,
+  promotionName VARCHAR(100),
+  promotionDiscount INT,
   FOREIGN KEY (categoryID) REFERENCES categories(categoryID),
   FOREIGN KEY (manufacturerID) REFERENCES manufacturers(manufacturerID)
 );

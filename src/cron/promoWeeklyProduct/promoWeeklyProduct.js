@@ -27,11 +27,11 @@ const newWeeklyPromo = async () => {
       toDate: getSundaysDate()
     });
     const oldPromoTagUpdate = Product.update(
-      { weeklyPromo: false },
-      { where: { weeklyPromo: true } }
+      { promotionName: null, promotionDiscount: null },
+      { where: { promotionName: 'weeklyPromo' } }
     );
     const newPromoTagUpdate = Product.update(
-      { weeklyPromo: true },
+      { promotionName: 'weeklyPromo', promotionDiscount: 20 },
       { where: { productId: product.productID } }
     );
   } catch (e) {
