@@ -5,6 +5,14 @@ const {
   getAttributeFilters,
   getPriceRange
 } = require('../util/product/getFilters');
+const {
+  getMostBoughtProducts,
+  getMostBoughtCategoryProducts,
+  getYouMayLikeThisProducts,
+  getDiscountedProducts,
+  getDailyProduct,
+  getWeeklyProduct
+} = require('../util/product/getFrontProducts');
 const getProductSorting = require('../util/product/getProductSorting');
 const db = require('../models');
 const { Product, Manufacturer, Category, Attribute, Price, sequelize } = db;
@@ -344,179 +352,22 @@ const getProductHints = async (productName) => {
   }
 };
 
-const getMostBoughtProducts = async (period) => {
-  try {
-    const product = await Product.findAll({
-      attributes: {
-        exclude: ['categoryID', 'manufacturerID', 'quantity', 'description'],
-        include: [
-          [
-            sequelize.literal(`(
-                SELECT COUNT(*)
-                FROM invoiceItems AS invoiceItem
-                WHERE invoiceItem.productID = product.productID
-            )`),
-            'productsCount'
-          ]
-        ]
-      },
-      include: [
-        {
-          model: Price,
-          attributes: {
-            exclude: ['priceID', 'productID', 'netPrice', 'taxPercentage', 'fromDate', 'toDate']
-          }
-        },
-        {
-          model: Manufacturer,
-          as: 'Manufacturer',
-          attributes: {
-            exclude: ['manufacturerID']
-          }
-        },
-        {
-          model: Attribute,
-          as: 'Attributes',
-          attributes: {
-            exclude: ['attributeID', 'productID', 'property', 'type']
-          },
-          where: { type: 2 }
-        }
-      ],
-      order: [[db.sequelize.literal('productsCount'), 'DESC']],
-      limit: 6
-    });
-    return product;
-  } catch (e) {
-    return { status: 500, data: [], message: e.message };
-  }
-};
-
-const getMostBoughtCategoryProducts = async () => {
-  try {
-    const product = await Product.findAll({
-      attributes: {
-        exclude: ['categoryID', 'manufacturerID', 'quantity', 'description'],
-        include: [
-          [
-            sequelize.literal(`(
-                SELECT COUNT(*)
-                FROM invoiceItems AS invoiceItem
-                WHERE invoiceItem.productID = product.productID
-            )`),
-            'productsCount'
-          ]
-        ]
-      },
-      where: {
-        categoryID: [
-          sequelize.literal(`(
-            SELECT c.categoryID
-            FROM invoiceItems AS i
-            INNER JOIN products as p ON i.productID = p.productID
-            INNER JOIN categories as c ON c.categoryID = p.categoryID
-            GROUP BY c.categoryID
-            ORDER BY COUNT(*) DESC
-            LIMIT 1
-        )`),
-          'category'
-        ]
-      },
-      include: [
-        {
-          model: Price,
-          attributes: {
-            exclude: ['priceID', 'productID', 'netPrice', 'taxPercentage', 'fromDate', 'toDate']
-          }
-        },
-        {
-          model: Manufacturer,
-          as: 'Manufacturer',
-          attributes: {
-            exclude: ['manufacturerID']
-          }
-        },
-        {
-          model: Attribute,
-          as: 'Attributes',
-          attributes: {
-            exclude: ['attributeID', 'productID', 'property', 'type']
-          },
-          where: { type: 2 }
-        }
-      ],
-      order: [[db.sequelize.literal('productsCount'), 'DESC']],
-      limit: 6
-    });
-    return product;
-    // return { status: 200, data: product, message: 'Product retrieved' };
-  } catch (e) {
-    return { status: 500, data: [], message: e.message };
-  }
-};
-
-const getYouMayLikeThisProducts = async () => {
-  try {
-    const product = await Product.findAll({
-      include: [
-        {
-          model: Price,
-          attributes: { exclude: ['priceID', 'netPrice', 'taxPercentage', 'fromDate', 'toDate'] }
-        },
-        {
-          model: Manufacturer,
-          as: 'Manufacturer',
-          attributes: {
-            exclude: ['manufacturerID']
-          }
-        },
-        {
-          model: Attribute,
-          as: 'Attributes',
-          attributes: {
-            exclude: ['attributeID', 'productID', 'property', 'type']
-          },
-          where: { type: 2 }
-        }
-      ],
-      attributes: { exclude: ['categoryID', 'manufacturerID', 'quantity', 'description'] },
-      limit: 6,
-      order: sequelize.random()
-    });
-    return product;
-    // return { status: 200, data: product, message: 'Product retrieved' };
-  } catch (e) {
-    return { status: 500, data: [], message: e.message };
-  }
-};
-
 const getFrontPageProducts = async () => {
   try {
-    const productDataWeekly = {
-      Attributes: [{ value: '/images/products/13/1695259_2_i1064.jpg' }],
-      Manufacturer: { manufacturerName: 'Seagate' },
-      Prices: [{ grossPrice: 264.4, promoPrice: 235.2 }],
-      productID: 13,
-      productName: 'Barracuda Pro 1 TB 2.5" SATA III (ST1000LM049)',
-      productsCount: 0
-    };
-    const productDataDaily = {
-      Attributes: [{ value: '/images/products/13/1695259_2_i1064.jpg' }],
-      Manufacturer: { manufacturerName: 'Seagate' },
-      Prices: [{ grossPrice: 264.4, promoPrice: 235.2 }],
-      productID: 13,
-      productName: 'Barracuda Pro 1 TB 2.5" SATA III (ST1000LM049)',
-      productsCount: 2
-    };
-    const promoProducts = {
-      productDataDaily: productDataDaily,
-      productDataWeekly: productDataWeekly
-    };
+    const likedProducts = await getYouMayLikeThisProducts();
+    const categoryProducts = await getMostBoughtCategoryProducts();
+    const boughtProducts = await getMostBoughtProducts();
+    const discountProducts = await getDiscountedProducts();
+    const dailyPromoProduct = await getDailyProduct();
+    const weeklyPromoProduct = await getWeeklyProduct();
+
     const products = await {
-      youMayLikeProducts: await getYouMayLikeThisProducts(),
-      mostBoughtCategoryProducts: await getMostBoughtCategoryProducts(),
-      mostBoughtProducts: await getMostBoughtProducts(),
-      promoProducts: promoProducts
+      youMayLikeProducts: likedProducts ? likedProducts : null,
+      mostBoughtCategoryProducts: categoryProducts ? categoryProducts : null,
+      mostBoughtProducts: boughtProducts ? boughtProducts : null,
+      discountProducts: discountProducts ? discountProducts : null,
+      productDataDaily: dailyPromoProduct ? dailyPromoProduct : null,
+      productDataWeekly: weeklyPromoProduct ? weeklyPromoProduct : null
     };
     return { status: 200, data: products, message: 'Products retrieved.' };
   } catch (e) {

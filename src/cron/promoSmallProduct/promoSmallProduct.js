@@ -9,7 +9,6 @@ const newDailySmallPromo = async () => {
     { where: { promotionName: 'dailyDiscount' } }
   );
   for (let promoCounter = 0; promoCounter <= 5; ++promoCounter) {
-    console.log(promoCounter);
     try {
       const product = await Product.findOne({
         include: [{ model: Price }],
@@ -18,7 +17,6 @@ const newDailySmallPromo = async () => {
       });
       if (product.promotionName === null) {
         const randomDiscount = (Math.random() * (0.15 - 0.05) + 0.05).toFixed(2);
-        console.log({ randomDiscount });
         const price = await Price.create({
           productID: product.productID,
           netPrice: (product.Prices[0].grossPrice * (1 - randomDiscount) * 0.77).toFixed(2),
@@ -31,13 +29,10 @@ const newDailySmallPromo = async () => {
           { promotionName: 'dailyDiscount', promotionDiscount: randomDiscount * 100 },
           { where: { productId: product.productID } }
         );
-        console.log('finished', promoCounter);
       } else {
-        console.log('kekw');
         promoCounter -= 1;
       }
     } catch (e) {
-      console.log(e);
       await transaction.rollback();
     }
   }

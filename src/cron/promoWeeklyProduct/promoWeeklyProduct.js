@@ -6,7 +6,7 @@ const getSundaysDate = () => {
   const todaysDate = new Date();
   const todaysDay = todaysDate.getDay();
   const nextSunday = new Date();
-  nextSunday.setDate(todaysDate.getDate() + (6 - todaysDay));
+  nextSunday.setDate(todaysDate.getDate() + (7 - todaysDay));
   return nextSunday;
 };
 

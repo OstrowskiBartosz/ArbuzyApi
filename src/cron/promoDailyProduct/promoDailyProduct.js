@@ -4,7 +4,6 @@ const { Product, Price, sequelize } = db;
 
 const newDailyPromo = async () => {
   const transaction = await db.sequelize.transaction();
-  console.log('kekw');
   try {
     const product = await Product.findOne({
       include: [{ model: Price }],
