@@ -1,6 +1,6 @@
 const db = require('../../models');
 const { Product, Manufacturer, Attribute, Price, sequelize } = db;
-const { Op } = require('sequelize');
+const { Op, DATE } = require('sequelize');
 
 const getMostBoughtProducts = async (period) => {
   try {
@@ -146,7 +146,7 @@ const getYouMayLikeThisProducts = async () => {
   }
 };
 
-const getDailyProduct = async () => {
+const getDailyPromoProduct = async () => {
   try {
     const product = await Product.findOne({
       include: [
@@ -155,8 +155,12 @@ const getDailyProduct = async () => {
           attributes: ['grossPrice', 'fromDate', 'toDate'],
           where: {
             [Op.or]: [
-              { fromDate: null },
-              { [Op.and]: [{ fromDate: sequelize.fn('NOW') }, { toDate: sequelize.fn('NOW') }] }
+              [
+                sequelize.where(sequelize.fn('NOW'), {
+                  [Op.between]: [sequelize.col('fromDate'), sequelize.col('toDate')]
+                })
+              ],
+              { fromDate: null, toDate: null }
             ]
           }
         },
@@ -176,7 +180,7 @@ const getDailyProduct = async () => {
           where: { type: 2 }
         }
       ],
-      attributes: { exclude: ['categoryID', 'manufacturerID', 'quantity', 'description'] },
+      attributes: { exclude: ['categoryID', 'manufacturerID', 'description'] },
       where: { promotionName: 'dailyPromo' }
     });
     return product;
@@ -185,23 +189,22 @@ const getDailyProduct = async () => {
   }
 };
 
-const getWeeklyProduct = async () => {
+const getWeeklyPromoProduct = async () => {
   try {
-    const todaysDate = new Date();
     const product = await Product.findOne({
       include: [
         {
           model: Price,
           attributes: ['grossPrice', 'fromDate', 'toDate'],
           where: {
-            [sequelize.fn('NOW')]: { [Op.between]: [fromDate, toDate] }
-            // [Op.or]: [
-            //   { fromDate: null },
-            //   {
-
-            //   }
-            // ]
-            // }
+            [Op.or]: [
+              [
+                sequelize.where(sequelize.fn('NOW'), {
+                  [Op.between]: [sequelize.col('fromDate'), sequelize.col('toDate')]
+                })
+              ],
+              { fromDate: null, toDate: null }
+            ]
           }
         },
         {
@@ -220,9 +223,10 @@ const getWeeklyProduct = async () => {
           where: { type: 2 }
         }
       ],
-      attributes: { exclude: ['categoryID', 'manufacturerID', 'quantity', 'description'] },
+      attributes: { exclude: ['categoryID', 'manufacturerID', 'description'] },
       where: { promotionName: 'weeklyPromo' }
     });
+
     return product;
   } catch (e) {
     return null;
@@ -238,8 +242,12 @@ const getDiscountedProducts = async () => {
           attributes: ['grossPrice', 'fromDate', 'toDate'],
           where: {
             [Op.or]: [
-              { fromDate: null },
-              { [Op.and]: [{ fromDate: sequelize.fn('NOW') }, { toDate: sequelize.fn('NOW') }] }
+              [
+                sequelize.where(sequelize.fn('NOW'), {
+                  [Op.between]: [sequelize.col('fromDate'), sequelize.col('toDate')]
+                })
+              ],
+              { fromDate: null, toDate: null }
             ]
           }
         },
@@ -273,8 +281,8 @@ module.exports = {
   getMostBoughtCategoryProducts,
   getYouMayLikeThisProducts,
   getDiscountedProducts,
-  getDailyProduct,
-  getWeeklyProduct
+  getDailyPromoProduct,
+  getWeeklyPromoProduct
 };
 
 // const productDataWeekly = {

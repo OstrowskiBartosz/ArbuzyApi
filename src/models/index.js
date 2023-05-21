@@ -12,7 +12,7 @@ const config = {
   define: {
     timestamps: false
   },
-  logging: false
+  timezone: '+02:00'
 };
 
 const sequelize = new Sequelize(S_DB_NAME, S_DB_USER, S_DB_PASSWORD, config);

@@ -10,8 +10,8 @@ const {
   getMostBoughtCategoryProducts,
   getYouMayLikeThisProducts,
   getDiscountedProducts,
-  getDailyProduct,
-  getWeeklyProduct
+  getDailyPromoProduct,
+  getWeeklyPromoProduct
 } = require('../util/product/getFrontProducts');
 const getProductSorting = require('../util/product/getProductSorting');
 const db = require('../models');
@@ -358,16 +358,16 @@ const getFrontPageProducts = async () => {
     const categoryProducts = await getMostBoughtCategoryProducts();
     const boughtProducts = await getMostBoughtProducts();
     const discountProducts = await getDiscountedProducts();
-    const dailyPromoProduct = await getDailyProduct();
-    const weeklyPromoProduct = await getWeeklyProduct();
+    const dailyPromoProduct = await getDailyPromoProduct();
+    const weeklyPromoProduct = await getWeeklyPromoProduct();
 
     const products = await {
       youMayLikeProducts: likedProducts ? likedProducts : null,
       mostBoughtCategoryProducts: categoryProducts ? categoryProducts : null,
       mostBoughtProducts: boughtProducts ? boughtProducts : null,
       discountProducts: discountProducts ? discountProducts : null,
-      productDataDaily: dailyPromoProduct ? dailyPromoProduct : null,
-      productDataWeekly: weeklyPromoProduct ? weeklyPromoProduct : null
+      dailyPromoProduct: dailyPromoProduct ? dailyPromoProduct : null,
+      weeklyPromoProduct: weeklyPromoProduct ? weeklyPromoProduct : null
     };
     return { status: 200, data: products, message: 'Products retrieved.' };
   } catch (e) {

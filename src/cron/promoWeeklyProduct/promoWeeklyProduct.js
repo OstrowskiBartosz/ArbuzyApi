@@ -2,12 +2,12 @@ var cron = require('node-cron');
 const db = require('../../models');
 const { Product, Price, sequelize } = db;
 
-const getSundaysDate = () => {
+const getMondaysDate = () => {
   const todaysDate = new Date();
   const todaysDay = todaysDate.getDay();
-  const nextSunday = new Date();
-  nextSunday.setDate(todaysDate.getDate() + (7 - todaysDay));
-  return nextSunday;
+  const nextMonday = new Date();
+  nextMonday.setDate(nextMonday.getDate() + ((7 - nextMonday.getDay()) % 7) + 1);
+  return nextMonday;
 };
 
 const newWeeklyPromo = async () => {
@@ -24,7 +24,7 @@ const newWeeklyPromo = async () => {
       grossPrice: product.Prices[0].grossPrice * 0.9,
       taxPercentage: 23,
       fromDate: new Date(),
-      toDate: getSundaysDate()
+      toDate: getMondaysDate().setHours(0, 0, 0)
     });
     const oldPromoTagUpdate = Product.update(
       { promotionName: null, promotionDiscount: null },

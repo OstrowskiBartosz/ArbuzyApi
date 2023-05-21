@@ -16,7 +16,7 @@ const newDailyPromo = async () => {
       grossPrice: product.Prices[0].grossPrice * 0.8,
       taxPercentage: 23,
       fromDate: new Date(),
-      toDate: new Date()
+      toDate: new Date().setHours(24, 00, 00)
     });
     const oldPromoTagUpdate = Product.update(
       { promotionName: null, promotionDiscount: null },
