@@ -268,6 +268,7 @@ const getDiscountedProducts = async () => {
         }
       ],
       attributes: { exclude: ['categoryID', 'manufacturerID', 'quantity', 'description'] },
+      limit: 6,
       where: { promotionName: 'dailyDiscount' }
     });
     return product;
@@ -284,12 +285,3 @@ module.exports = {
   getDailyPromoProduct,
   getWeeklyPromoProduct
 };
-
-// const productDataWeekly = {
-//   Attributes: [{ value: '/images/products/13/1695259_2_i1064.jpg' }],
-//   Manufacturer: { manufacturerName: 'Seagate' },
-//   Prices: [{ grossPrice: 264.4, promoPrice: 235.2 }],
-//   productID: 13,
-//   productName: 'Barracuda Pro 1 TB 2.5" SATA III (ST1000LM049)',
-//   productsCount: 0
-// };

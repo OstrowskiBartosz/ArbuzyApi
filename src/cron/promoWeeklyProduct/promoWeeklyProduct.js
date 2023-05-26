@@ -13,33 +13,43 @@ const getMondaysDate = () => {
 const newWeeklyPromo = async () => {
   const transaction = await db.sequelize.transaction();
   try {
-    const product = await Product.findOne({
-      include: [{ model: Price }],
-      order: sequelize.random(),
-      limit: 1
-    });
-    const price = await Price.create({
-      productID: product.productID,
-      netPrice: product.Prices[0].grossPrice * 0.9 * 0.77,
-      grossPrice: product.Prices[0].grossPrice * 0.9,
-      taxPercentage: 23,
-      fromDate: new Date(),
-      toDate: getMondaysDate().setHours(0, 0, 0)
-    });
-    const oldPromoTagUpdate = Product.update(
+    const product = await Product.findOne(
+      {
+        include: [{ model: Price }],
+        order: sequelize.random(),
+        limit: 1
+      },
+      { transaction }
+    );
+
+    const price = await Price.create(
+      {
+        productID: product.productID,
+        netPrice: product.Prices[0].grossPrice * 0.9 * 0.77,
+        grossPrice: product.Prices[0].grossPrice * 0.9,
+        taxPercentage: 23,
+        fromDate: new Date(),
+        toDate: getMondaysDate().setHours(0, 0, 0)
+      },
+      { transaction }
+    );
+
+    const oldPromoTagUpdate = await Product.update(
       { promotionName: null, promotionDiscount: null },
-      { where: { promotionName: 'weeklyPromo' } }
+      { where: { promotionName: 'weeklyPromo' }, transaction }
     );
-    const newPromoTagUpdate = Product.update(
+
+    const newPromoTagUpdate = await Product.update(
       { promotionName: 'weeklyPromo', promotionDiscount: 20 },
-      { where: { productId: product.productID } }
+      { where: { productId: product.productID }, transaction }
     );
+    await transaction.commit();
   } catch (e) {
     await transaction.rollback();
   }
 };
 
-var task = cron.schedule('0 0 * * 1', async () => {
+let task = cron.schedule('0 0 * * 1', async () => {
   newWeeklyPromo();
 });
 

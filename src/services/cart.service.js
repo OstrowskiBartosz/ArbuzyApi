@@ -68,13 +68,20 @@ const getCart = async (session) => {
 };
 
 const deleteCart = async (session, cartID) => {
+  const transaction = db.sequelize.transaction();
   try {
     const user = await User.findOne({ where: { login: session } });
-    if (user === null) return { status: 401, data: {}, message: 'No active session.' };
-    const cartItemDeleted = await CartItem.destroy({ where: { cartID: cartID } });
-    const cartDeleted = await Cart.destroy({ where: { cartID: cartID } });
+    if (user === null) {
+      await transaction.rollback();
+      return { status: 401, data: {}, message: 'No active session.' };
+    }
+
+    const cartItemDeleted = await CartItem.destroy({ where: { cartID: cartID }, transaction });
+    const cartDeleted = await Cart.destroy({ where: { cartID: cartID }, transaction });
+    await transaction.commit();
     return { status: 200, data: [], message: 'Cart has been deleted.' };
   } catch (e) {
+    await await transaction.rollback();
     return { status: 500, data: [], message: e.message };
   }
 };

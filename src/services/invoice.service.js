@@ -101,58 +101,67 @@ const postInvoice = async (userSession, paymentMethod) => {
 
   try {
     const cart = await Cart.findOne({ where: { userID: user.userID } });
-    const cartItem = await CartItem.findAll({
-      include: [
-        {
-          model: Product,
-          include: [{ model: Price }]
-        }
-      ],
-      where: { cartID: cart.cartID }
-    });
+    const cartItem = await CartItem.findAll(
+      {
+        include: [
+          {
+            model: Product,
+            include: [{ model: Price }]
+          }
+        ],
+        where: { cartID: cart.cartID }
+      },
+      { transaction }
+    );
 
-    const invoice = await Invoice.create({
-      userID: user.userID,
-      invoiceDate: db.sequelize.fn('NOW'),
-      netPrice: cart.totalPriceOfProducts * 0.77,
-      grossPrice: cart.totalPriceOfProducts,
-      taxPercentage: 23,
-      paymentMethod: paymentMethod,
-      status: 'Pending',
-      name: `${user.firstName} ${user.lastName}`,
-      cityName: user.cityName,
-      streetName: user.streetName,
-      ZIPCode: user.ZIPCode,
-      VATNumber: user.VATNumber ? user.VATNumber : null,
-      companyName: user.companyName ? user.companyName : null
-    });
+    const invoice = await Invoice.create(
+      {
+        userID: user.userID,
+        invoiceDate: db.sequelize.fn('NOW'),
+        netPrice: cart.totalPriceOfProducts * 0.77,
+        grossPrice: cart.totalPriceOfProducts,
+        taxPercentage: 23,
+        paymentMethod: paymentMethod,
+        status: 'Pending',
+        name: `${user.firstName} ${user.lastName}`,
+        cityName: user.cityName,
+        streetName: user.streetName,
+        ZIPCode: user.ZIPCode,
+        VATNumber: user.VATNumber ? user.VATNumber : null,
+        companyName: user.companyName ? user.companyName : null
+      },
+      { transaction }
+    );
 
-    cartItem.forEach(async (item) => {
-      await InvoiceItem.create({
-        invoiceID: invoice.invoiceID,
-        productID: item.productID,
-        productName: item.Product.productName,
-        netPrice: item.Product.Prices[0].netPrice,
-        grossPrice: item.Product.Prices[0].grossPrice,
-        taxPercentage: item.Product.Prices[0].taxPercentage,
-        quantity: item.quantity
-      });
-    });
+    cartItem.forEach(
+      async (item) => {
+        await InvoiceItem.create({
+          invoiceID: invoice.invoiceID,
+          productID: item.productID,
+          productName: item.Product.productName,
+          netPrice: item.Product.Prices[0].netPrice,
+          grossPrice: item.Product.Prices[0].grossPrice,
+          taxPercentage: item.Product.Prices[0].taxPercentage,
+          quantity: item.quantity
+        });
+      },
+      { transaction }
+    );
 
     cartItem.forEach(async (item) => {
       if (item.Product.quantity - item.quantity >= 0) {
         await Product.update(
           { quantity: item.Product.quantity - item.quantity },
-          { where: { productID: item.productID } }
+          { where: { productID: item.productID }, transaction }
         );
       } else {
         throw Error('limit');
       }
     });
-    const cartItemDelete = await CartItem.destroy({ where: { cartID: cart.cartID } });
-    const cartDelete = await Cart.destroy({ where: { userID: user.userID } });
+    const cartItemDelete = await CartItem.destroy({ where: { cartID: cart.cartID }, transaction });
+    const cartDelete = await Cart.destroy({ where: { userID: user.userID }, transaction });
 
-    await t.commit();
+    await transaction.commit();
     return {
       status: 200,
       data: { invoiceID: invoice.invoiceID },
