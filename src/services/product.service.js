@@ -182,7 +182,7 @@ const getProducts = async (productName, query, url) => {
       order: [sortBy],
       limit: [productLimit],
       offset: pageOffset > getNumberOfProducts.length ? 0 : pageOffset,
-      subQuery: false
+      subQuery: true
     });
 
     const category = await Category.findAll({

@@ -19,12 +19,14 @@ const getCartItemsNumber = async (session) => {
 
 const getCart = async (session) => {
   try {
+    const transaction = await db.sequelize.transaction();
     const user = await User.findOne({ where: { login: session } });
     if (user === null) return { status: 401, data: [], message: 'No active session.' };
 
     const cart = await Cart.findOne({
       attributes: { exclude: ['userID'] },
-      where: { userID: user.userID }
+      where: { userID: user.userID },
+      transaction: transaction
     });
 
     const cartItems = await CartItem.findAll({
@@ -58,17 +60,46 @@ const getCart = async (session) => {
             exclude: ['description', 'manufacturerID', 'quantity']
           }
         }
-      ]
+      ],
+      transaction: transaction
     });
 
-    return { status: 200, data: { cartData: cart, cartItemsData: cartItems }, message: 'Success.' };
+    let totalPriceOfProducts = 0;
+    cartItems.forEach((cartItem) => {
+      let productPrice = cartItem.Product.promotionName
+        ? cartItem.Product.Prices[cartItem.Product.Prices.length - 1].grossPrice
+        : cartItem.Product.Prices[0].grossPrice;
+      totalPriceOfProducts += productPrice * cartItem.quantity;
+    });
+
+    const cartUpdate = await Cart.update(
+      {
+        totalPriceOfProducts: totalPriceOfProducts
+      },
+      { where: { userID: user.userID }, transaction: transaction }
+    );
+
+    const cartUpdated = await Cart.findOne({
+      attributes: { exclude: ['userID'] },
+      where: { userID: user.userID },
+      transaction: transaction
+    });
+
+    await transaction.commit();
+    return {
+      status: 200,
+      data: { cartData: cartUpdated, cartItemsData: cartItems },
+      message: 'Success.'
+    };
   } catch (e) {
+    await transaction.rollback();
+    console.log('2');
     return { status: 500, data: [], message: e.message };
   }
 };
 
 const deleteCart = async (session, cartID) => {
-  const transaction = db.sequelize.transaction();
+  const transaction = await db.sequelize.transaction();
   try {
     const user = await User.findOne({ where: { login: session } });
     if (user === null) {
