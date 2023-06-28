@@ -5,4 +5,5 @@ source C:/Users/Haxxf/OneDrive/Dokumenty/Projekty/shop/api/src/sql/sqlProducts.s
 source C:/Users/Haxxf/OneDrive/Dokumenty/Projekty/shop/api/src/sql/sqlTests.sql;
 /*
 source C:/Users/Haxxf/OneDrive/Dokumenty/Projekty/shop/api/src/sql/sqlTestsource.sql;
+node C:\Users\Haxxf\OneDrive\Dokumenty\Projekty\shop\api\src\cron\runCrons.js;
 */

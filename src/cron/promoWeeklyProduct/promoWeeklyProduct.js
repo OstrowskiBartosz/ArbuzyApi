@@ -10,7 +10,7 @@ const getMondaysDate = () => {
   return nextMonday;
 };
 
-const newWeeklyPromo = async () => {
+module.exports = promoWeeklyProduct = async () => {
   const transaction = await db.sequelize.transaction();
   try {
     const product = await Product.findOne(
@@ -50,7 +50,7 @@ const newWeeklyPromo = async () => {
 };
 
 let task = cron.schedule('0 0 * * 1', async () => {
-  newWeeklyPromo();
+  promoWeeklyProduct();
 });
 
 task.start();

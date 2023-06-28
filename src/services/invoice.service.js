@@ -1,10 +1,11 @@
 const db = require('../models');
 const { Invoice, InvoiceItem, User, Product, Manufacturer, Category, Price, Cart, CartItem } = db;
+const checkUserLogged = require('../util/checkUserLogged');
 
 const getInvoices = async (userSession) => {
   try {
-    const user = await User.findOne({ where: { login: userSession } });
-    if (user === null) return { status: 401, data: [], message: 'No active session.' };
+    const transaction = await db.sequelize.transaction();
+    const user = await checkUserLogged(userSession, transaction);
 
     const invoice = await Invoice.findAll({
       attributes: { exclude: ['userID', 'taxPercentage'] },
@@ -18,8 +19,8 @@ const getInvoices = async (userSession) => {
 
 const getInvoice = async (userSession, invoiceID) => {
   try {
-    const user = await User.findOne({ where: { login: userSession } });
-    if (user === null) return { status: 401, data: [], message: 'No active session.' };
+    const transaction = await db.sequelize.transaction();
+    const user = await checkUserLogged(userSession, transaction);
 
     const invoice = await Invoice.findOne({
       attributes: { exclude: ['userID', 'taxPercentage'] },
@@ -58,61 +59,66 @@ const getInvoice = async (userSession, invoiceID) => {
           ]
         }
       ],
-      where: { userID: user.userID, invoiceID: invoiceID }
+      where: { userID: user.userID, invoiceID: invoiceID },
+      transaction: transaction
     });
-    if (invoice) return { status: 200, data: invoice, message: 'Success.' };
-    else return { status: 400, data: invoice, message: "Didn't find such invoice." };
+    if (invoice) {
+      transaction.commit();
+      return { status: 200, data: invoice, message: 'Success.' };
+    } else {
+      transaction.rollback();
+      return { status: 400, data: invoice, message: "Didn't find such invoice." };
+    }
   } catch (e) {
+    transaction.rollback();
     return { status: 500, data: [], message: e.message };
   }
 };
 
 const updateInvoice = async (userSession, invoiceID) => {
   try {
-    const user = await User.findOne({ where: { login: userSession } });
-    if (user === null) return { status: 401, data: [], message: 'No active session.' };
+    const transaction = await db.sequelize.transaction();
+    const user = await checkUserLogged(userSession, transaction);
 
     const invoice = await Invoice.findOne({
       attributes: { exclude: ['userID', 'taxPercentage'] },
-      where: { userID: user.userID, invoiceID: invoiceID }
+      where: { userID: user.userID, invoiceID: invoiceID },
+      transaction: transaction
     });
 
     if (invoice.status === 'Pending') {
       const updateInvoice = await Invoice.update(
-        {
-          status: 'Cancelled'
-        },
-        { where: { userID: user.userID, invoiceID: invoiceID } }
+        { status: 'Cancelled' },
+        { where: { userID: user.userID, invoiceID: invoiceID }, transaction: transaction }
       );
-      return { status: 200, data: [], message: 'Success.' };
+      transaction.commit();
+      return { status: 200, data: null, message: 'Success.' };
     } else {
-      return { status: 400, data: [], message: "Can't cancel this order." };
+      transaction.rollback();
+      return { status: 400, data: null, message: "Can't cancel this order." };
     }
   } catch (e) {
-    return { status: 500, data: [], message: e.message };
+    transaction.rollback();
+    return { status: 500, data: null, message: e.message };
   }
 };
 
 const postInvoice = async (userSession, paymentMethod) => {
-  const user = await User.findOne({ where: { login: userSession } });
-  if (user === null) return { status: 401, data: [], message: 'No active session.' };
-
-  const transaction = await db.sequelize.transaction();
-
   try {
+    const transaction = await db.sequelize.transaction();
+    const user = await checkUserLogged(userSession, transaction);
+
     const cart = await Cart.findOne({ where: { userID: user.userID } });
-    const cartItem = await CartItem.findAll(
-      {
-        include: [
-          {
-            model: Product,
-            include: [{ model: Price }]
-          }
-        ],
-        where: { cartID: cart.cartID }
-      },
-      { transaction }
-    );
+    const cartItem = await CartItem.findAll({
+      include: [
+        {
+          model: Product,
+          include: [{ model: Price }]
+        }
+      ],
+      where: { cartID: cart.cartID },
+      transaction: transaction
+    });
 
     const invoice = await Invoice.create(
       {
@@ -130,12 +136,12 @@ const postInvoice = async (userSession, paymentMethod) => {
         VATNumber: user.VATNumber ? user.VATNumber : null,
         companyName: user.companyName ? user.companyName : null
       },
-      { transaction }
+      { transaction: transaction }
     );
 
-    cartItem.forEach(
-      async (item) => {
-        await InvoiceItem.create({
+    cartItem.forEach(async (item) => {
+      await InvoiceItem.create(
+        {
           invoiceID: invoice.invoiceID,
           productID: item.productID,
           productName: item.Product.productName,
@@ -143,23 +149,29 @@ const postInvoice = async (userSession, paymentMethod) => {
           grossPrice: item.Product.Prices[0].grossPrice,
           taxPercentage: item.Product.Prices[0].taxPercentage,
           quantity: item.quantity
-        });
-      },
-      { transaction }
-    );
+        },
+        { transaction: transaction }
+      );
+    });
 
     cartItem.forEach(async (item) => {
       if (item.Product.quantity - item.quantity >= 0) {
         await Product.update(
           { quantity: item.Product.quantity - item.quantity },
-          { where: { productID: item.productID }, transaction }
+          { where: { productID: item.productID }, transaction: transaction }
         );
       } else {
         throw Error('limit');
       }
     });
-    const cartItemDelete = await CartItem.destroy({ where: { cartID: cart.cartID }, transaction });
-    const cartDelete = await Cart.destroy({ where: { userID: user.userID }, transaction });
+    const cartItemDelete = await CartItem.destroy({
+      where: { cartID: cart.cartID },
+      transaction: transaction
+    });
+    const cartDelete = await Cart.destroy({
+      where: { userID: user.userID },
+      transaction: transaction
+    });
 
     await transaction.commit();
     return {
@@ -169,7 +181,7 @@ const postInvoice = async (userSession, paymentMethod) => {
     };
   } catch (e) {
     await transaction.rollback();
-    return { status: 500, data: [], message: e.message };
+    return { status: 500, data: null, message: e.message };
   }
 };
 

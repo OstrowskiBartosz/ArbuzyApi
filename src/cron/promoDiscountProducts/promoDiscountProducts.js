@@ -2,7 +2,7 @@ var cron = require('node-cron');
 const db = require('../../models');
 const { Product, Price, sequelize } = db;
 
-const newDailyDiscountPromos = async () => {
+module.exports = promoDiscountProducts = async () => {
   const oldPromoTagUpdate = Product.update(
     { promotionName: null, promotionDiscount: null },
     { where: { promotionName: 'dailyDiscount' } }
@@ -31,7 +31,7 @@ const newDailyDiscountPromos = async () => {
             grossPrice: (product.Prices[0].grossPrice * discountPercentage).toFixed(2),
             taxPercentage: 23,
             fromDate: new Date(),
-            toDate: new Date().setHours(24, 00, 00)
+            toDate: new Date().setHours(24, 0, 0)
           },
           { transaction }
         );
@@ -55,7 +55,7 @@ const newDailyDiscountPromos = async () => {
 };
 
 let task = cron.schedule('0 0 * * *', async () => {
-  newDailyDiscountPromos();
+  promoDiscountProducts();
 });
 
 task.start();

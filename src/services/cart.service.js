@@ -1,119 +1,63 @@
 const db = require('../models');
-const { Cart, CartItem, Price, Product, Attribute, Manufacturer, User } = db;
+const { Cart, CartItem } = db;
+const checkUserLogged = require('../util/checkUserLogged');
+const checkCartPrice = require('../util/cart/checkCartPrice');
+const shoppingCartData = require('../util/cartItem/shoppingCartData');
 
-const getCartItemsNumber = async (session) => {
-  try {
-    const user = await User.findOne({ where: { login: session } });
-    if (user === null) return { status: 401, data: {}, message: 'No active session.' };
-    const cart = await Cart.findOne({ where: { userID: user.userID } });
-    if (cart === null) return { status: 200, data: { numberOfProducts: 0 }, message: 'No cart.' };
-    return {
-      status: 200,
-      data: { numberOfProducts: cart.numberOfProducts },
-      message: 'Cart found.'
-    };
-  } catch (e) {
-    return { status: 500, data: [], message: e.message };
-  }
-};
-
-const getCart = async (session) => {
+const getCartItemsNumber = async (userSession) => {
   try {
     const transaction = await db.sequelize.transaction();
-    const user = await User.findOne({ where: { login: session } });
-    if (user === null) return { status: 401, data: [], message: 'No active session.' };
+    const user = await checkUserLogged(userSession, transaction);
 
-    const cart = await Cart.findOne({
-      attributes: { exclude: ['userID'] },
-      where: { userID: user.userID },
-      transaction: transaction
-    });
-
-    const cartItems = await CartItem.findAll({
-      include: [
-        {
-          model: Product,
-          include: [
-            {
-              model: Price,
-              attributes: {
-                exclude: ['productID', 'priceID', 'netPrice', 'taxPercentage', 'fromDate', 'toDate']
-              }
-            },
-            {
-              model: Manufacturer,
-              as: 'Manufacturer',
-              attributes: {
-                exclude: ['manufacturerID']
-              }
-            },
-            {
-              model: Attribute,
-              as: 'Attributes',
-              attributes: {
-                exclude: ['attributeID', 'productID', 'property', 'type']
-              },
-              where: { type: 2 }
-            }
-          ],
-          attributes: {
-            exclude: ['description', 'manufacturerID', 'quantity']
-          }
-        }
-      ],
-      transaction: transaction
-    });
-
-    let totalPriceOfProducts = 0;
-    cartItems.forEach((cartItem) => {
-      let productPrice = cartItem.Product.promotionName
-        ? cartItem.Product.Prices[cartItem.Product.Prices.length - 1].grossPrice
-        : cartItem.Product.Prices[0].grossPrice;
-      totalPriceOfProducts += productPrice * cartItem.quantity;
-    });
-
-    const cartUpdate = await Cart.update(
-      {
-        totalPriceOfProducts: totalPriceOfProducts
-      },
-      { where: { userID: user.userID }, transaction: transaction }
-    );
-
-    const cartUpdated = await Cart.findOne({
-      attributes: { exclude: ['userID'] },
-      where: { userID: user.userID },
-      transaction: transaction
-    });
-
-    await transaction.commit();
-    return {
-      status: 200,
-      data: { cartData: cartUpdated, cartItemsData: cartItems },
-      message: 'Success.'
-    };
+    const cart = await Cart.findOne({ where: { userID: user.userID } });
+    if (!cart) {
+      transaction.rollback();
+      return { status: 200, data: { numberOfProducts: 0 }, message: 'No cart.' };
+    } else {
+      transaction.commit();
+      return { status: 200, data: { numberOfProducts: cart.numberOfProducts }, message: 'Cart found.' };
+    }
   } catch (e) {
-    await transaction.rollback();
-    console.log('2');
-    return { status: 500, data: [], message: e.message };
+    transaction.rollback();
+    return { status: 500, data: null, message: e.message };
   }
 };
 
-const deleteCart = async (session, cartID) => {
-  const transaction = await db.sequelize.transaction();
+const getCart = async (userSession) => {
   try {
-    const user = await User.findOne({ where: { login: session } });
-    if (user === null) {
-      await transaction.rollback();
-      return { status: 401, data: {}, message: 'No active session.' };
-    }
+    const transaction = await db.sequelize.transaction();
+    const user = await checkUserLogged(userSession, transaction);
 
-    const cartItemDeleted = await CartItem.destroy({ where: { cartID: cartID }, transaction });
-    const cartDeleted = await Cart.destroy({ where: { cartID: cartID }, transaction });
+    const [cart, cartCreated] = await Cart.findOrCreate({
+      where: { userID: user.userID },
+      defaults: { userID: user.userID },
+      transaction: transaction
+    });
+
+    const shoppingCart = await shoppingCartData(cart.cartID, transaction);
+    const cartData = await checkCartPrice(cart, shoppingCart, transaction);
+
     await transaction.commit();
-    return { status: 200, data: [], message: 'Cart has been deleted.' };
+    return { status: 200, data: { cartData: cartData, cartItemsData: shoppingCart }, message: 'Success.' };
+  } catch (e) {
+    await transaction.rollback();
+    return { status: 500, data: null, message: e.message };
+  }
+};
+
+const deleteCart = async (userSession, cartID) => {
+  try {
+    const transaction = await db.sequelize.transaction();
+    await checkUserLogged(userSession, transaction);
+
+    await CartItem.destroy({ where: { cartID: cartID }, transaction: transaction });
+    await Cart.destroy({ where: { cartID: cartID }, transaction: transaction });
+
+    await transaction.commit();
+    return { status: 200, data: null, message: 'Cart has been deleted.' };
   } catch (e) {
     await await transaction.rollback();
-    return { status: 500, data: [], message: e.message };
+    return { status: 500, data: null, message: e.message };
   }
 };
 
