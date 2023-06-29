@@ -1,7 +1,7 @@
 const db = require('../models');
 const { Cart, CartItem, Product, Price } = db;
 const { Op } = require('sequelize');
-const checkUserLogged = require('../util/checkUserLogged');
+const checkUserLogged = require('../util/user/checkUserLogged');
 const checkCurrentProductPrice = require('../util/cartItem/checkCurrentProductPrice');
 const updateCartItemQuantity = require('../util/cartItem/updateCartItemQuantity');
 const updateCartTotalPrice = require('../util/cartItem/updateCartTotalPrice');

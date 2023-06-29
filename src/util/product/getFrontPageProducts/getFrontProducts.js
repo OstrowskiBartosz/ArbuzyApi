@@ -1,8 +1,8 @@
-const db = require('../../models');
+const db = require('../../../models');
 const { Product, Manufacturer, Attribute, Price, sequelize } = db;
-const { Op, DATE } = require('sequelize');
+const { Op } = require('sequelize');
 
-const getMostBoughtProducts = async (period) => {
+const getMostBoughtProducts = async () => {
   try {
     const product = await Product.findAll({
       attributes: {

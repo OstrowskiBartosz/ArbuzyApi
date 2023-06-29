@@ -1,7 +1,7 @@
 const generatePasswordHash = require('../util/user/generatePasswordHash');
 const db = require('../models');
 const { User } = db;
-const checkUserLogged = require('../util/checkUserLogged');
+const checkUserLogged = require('../util/user/checkUserLogged');
 
 const getUser = async (userSession) => {
   try {

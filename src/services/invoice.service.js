@@ -1,6 +1,10 @@
 const db = require('../models');
-const { Invoice, InvoiceItem, User, Product, Manufacturer, Category, Price, Cart, CartItem } = db;
-const checkUserLogged = require('../util/checkUserLogged');
+const { Invoice, Product, Price, Cart, CartItem } = db;
+const requestedInvoice = require('../util/invoice/requestedInvoice');
+const checkUserLogged = require('../util/user/checkUserLogged');
+const createNewInvoice = require('../util/invoice/createNewInvoice');
+const createNewInvoiceItems = require('../util/invoice/createNewInvoiceItems');
+const resetCart = require('../util/invoice/resetCart');
 
 const getInvoices = async (userSession) => {
   try {
@@ -9,10 +13,13 @@ const getInvoices = async (userSession) => {
 
     const invoice = await Invoice.findAll({
       attributes: { exclude: ['userID', 'taxPercentage'] },
-      where: { userID: user.userID }
+      where: { userID: user.userID },
+      transaction: transaction
     });
+    transaction.commit();
     return { status: 200, data: invoice, message: 'Success.' };
   } catch (e) {
+    transaction.rollback();
     return { status: 500, data: [], message: e.message };
   }
 };
@@ -22,46 +29,7 @@ const getInvoice = async (userSession, invoiceID) => {
     const transaction = await db.sequelize.transaction();
     const user = await checkUserLogged(userSession, transaction);
 
-    const invoice = await Invoice.findOne({
-      attributes: { exclude: ['userID', 'taxPercentage'] },
-      include: [
-        {
-          model: InvoiceItem,
-          include: [
-            {
-              model: Product,
-              include: [
-                {
-                  model: Price,
-                  attributes: {
-                    exclude: ['productID', 'priceID', 'taxPercentage', 'fromDate', 'toDate']
-                  }
-                },
-                {
-                  model: Manufacturer,
-                  as: 'Manufacturer',
-                  attributes: {
-                    exclude: ['manufacturerID']
-                  }
-                },
-                {
-                  model: Category,
-                  as: 'Category',
-                  attributes: {
-                    exclude: ['categoryID']
-                  }
-                }
-              ],
-              attributes: {
-                exclude: ['description', 'manufacturerID', 'quantity']
-              }
-            }
-          ]
-        }
-      ],
-      where: { userID: user.userID, invoiceID: invoiceID },
-      transaction: transaction
-    });
+    const invoice = await requestedInvoice(user.userID, invoiceID, transaction);
     if (invoice) {
       transaction.commit();
       return { status: 200, data: invoice, message: 'Success.' };
@@ -87,7 +55,7 @@ const updateInvoice = async (userSession, invoiceID) => {
     });
 
     if (invoice.status === 'Pending') {
-      const updateInvoice = await Invoice.update(
+      await Invoice.update(
         { status: 'Cancelled' },
         { where: { userID: user.userID, invoiceID: invoiceID }, transaction: transaction }
       );
@@ -109,7 +77,7 @@ const postInvoice = async (userSession, paymentMethod) => {
     const user = await checkUserLogged(userSession, transaction);
 
     const cart = await Cart.findOne({ where: { userID: user.userID } });
-    const cartItem = await CartItem.findAll({
+    const cartItems = await CartItem.findAll({
       include: [
         {
           model: Product,
@@ -120,65 +88,12 @@ const postInvoice = async (userSession, paymentMethod) => {
       transaction: transaction
     });
 
-    const invoice = await Invoice.create(
-      {
-        userID: user.userID,
-        invoiceDate: db.sequelize.fn('NOW'),
-        netPrice: cart.totalPriceOfProducts * 0.77,
-        grossPrice: cart.totalPriceOfProducts,
-        taxPercentage: 23,
-        paymentMethod: paymentMethod,
-        status: 'Pending',
-        name: `${user.firstName} ${user.lastName}`,
-        cityName: user.cityName,
-        streetName: user.streetName,
-        ZIPCode: user.ZIPCode,
-        VATNumber: user.VATNumber ? user.VATNumber : null,
-        companyName: user.companyName ? user.companyName : null
-      },
-      { transaction: transaction }
-    );
-
-    cartItem.forEach(async (item) => {
-      await InvoiceItem.create(
-        {
-          invoiceID: invoice.invoiceID,
-          productID: item.productID,
-          productName: item.Product.productName,
-          netPrice: item.Product.Prices[0].netPrice,
-          grossPrice: item.Product.Prices[0].grossPrice,
-          taxPercentage: item.Product.Prices[0].taxPercentage,
-          quantity: item.quantity
-        },
-        { transaction: transaction }
-      );
-    });
-
-    cartItem.forEach(async (item) => {
-      if (item.Product.quantity - item.quantity >= 0) {
-        await Product.update(
-          { quantity: item.Product.quantity - item.quantity },
-          { where: { productID: item.productID }, transaction: transaction }
-        );
-      } else {
-        throw Error('limit');
-      }
-    });
-    const cartItemDelete = await CartItem.destroy({
-      where: { cartID: cart.cartID },
-      transaction: transaction
-    });
-    const cartDelete = await Cart.destroy({
-      where: { userID: user.userID },
-      transaction: transaction
-    });
+    const newInvoice = await createNewInvoice(user, cart, paymentMethod, transaction);
+    await createNewInvoiceItems(newInvoice.invoiceID, cartItems, transaction);
+    await resetCart(cart.cartID, user.userID, transaction);
 
     await transaction.commit();
-    return {
-      status: 200,
-      data: { invoiceID: invoice.invoiceID },
-      message: 'Items have been bought.'
-    };
+    return { status: 200, data: { invoiceID: newInvoice.invoiceID }, message: 'Items have been bought.' };
   } catch (e) {
     await transaction.rollback();
     return { status: 500, data: null, message: e.message };

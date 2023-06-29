@@ -1,10 +1,6 @@
 const getURLParams = require('../util/product/getURLParams');
 const groupFilterValues = require('../util/product/groupFilterValues');
-const {
-  getArrayFilters,
-  getAttributeFilters,
-  getPriceRange
-} = require('../util/product/getFilters');
+const { getArrayFilters, getAttributeFilters, getPriceRange } = require('../util/product/getFilters');
 const {
   getMostBoughtProducts,
   getMostBoughtCategoryProducts,
@@ -12,8 +8,14 @@ const {
   getDiscountedProducts,
   getDailyPromoProduct,
   getWeeklyPromoProduct
-} = require('../util/product/getFrontProducts');
+} = require('../util/product/getFrontPageProducts/getFrontProducts');
 const getProductSorting = require('../util/product/getProductSorting');
+const getMinAndMaxPrice = require('../util/product/getProducts/getMinAndMaxPrice');
+const getNumberOfProducts = require('../util/product/getProducts/getNumberOfProducts');
+const getAttributes = require('../util/product/getProducts/getAttributes');
+const getFilteredManufacturers = require('../util/product/getProducts/getFilteredManufacturers');
+const getFilteredCategories = require('../util/product/getProducts/getFilteredCategories');
+const getFilteredProducts = require('../util/product/getProducts/getFilteredProducts');
 const db = require('../models');
 const { Product, Manufacturer, Category, Attribute, Price, sequelize } = db;
 const { Op } = require('sequelize');
@@ -30,7 +32,7 @@ const getProduct = async (productID) => {
     });
     return { status: 200, data: product, message: 'Product retrieved' };
   } catch (e) {
-    return { status: 500, data: [], message: e.message };
+    return { status: 500, data: null, message: e.message };
   }
 };
 
@@ -43,283 +45,52 @@ const getProducts = async (productName, query, url) => {
 
     let manufacturers = [];
     const activeManufacturers = getArrayFilters(paramsObject, 'filterManufacturer');
-    activeManufacturers.map((ID) => manufacturers.push({ manufacturerID: ID }));
+    activeManufacturers.map((manufacturerID) => manufacturers.push({ manufacturerID: manufacturerID }));
 
     let categories = [];
     const activeCategories = getArrayFilters(paramsObject, 'filterCategory');
-    activeCategories.map((el) => categories.push({ categoryID: el }));
+    activeCategories.map((categoryID) => categories.push({ categoryID: categoryID }));
 
     const attributes = getAttributeFilters(paramsObject, productName);
     const whereLength = attributes.property.length;
     let where = whereLength > 0 ? attributes : {};
-    let having =
-      whereLength > 1
-        ? [sequelize.where(sequelize.literal('COUNT(Product.productID)'), '=', whereLength)]
-        : [];
+    let having = whereLength > 1 ? [sequelize.where(sequelize.literal('COUNT(Product.productID)'), '=', whereLength)] : [];
 
     const priceRange = getPriceRange(paramsObject);
     let priceWhere = priceRange.priceFrom
       ? { grossPrice: { [Op.between]: [priceRange.priceFrom, priceRange.priceTo] } }
       : {};
 
-    const getNumberOfProducts = await Product.findAll({
-      as: 'Product',
-      attributes: ['productID'],
-      include: [
-        {
-          model: Attribute,
-          as: 'va',
-          attributes: [],
-          where: where
-        },
-        {
-          model: Category,
-          as: 'Category',
-          attributes: [],
-          where: categories.length !== 0 ? { [Op.or]: categories } : {}
-        },
-        {
-          model: Manufacturer,
-          as: 'Manufacturer',
-          attributes: [],
-          where: manufacturers.length !== 0 ? { [Op.or]: manufacturers } : {}
-        },
-        {
-          model: Price,
-          attributes: ['grossPrice'],
-          where: priceWhere
-        }
-      ],
-      where: {
-        productName: { [Op.like]: `%${productName}%` }
-      },
-      group: ['Product.productID'],
-      having: having,
-      subQuery: false
-    });
+    const filteredProducts = await getFilteredProducts(
+      productName,
+      categories,
+      manufacturers,
+      priceWhere,
+      where,
+      whereLength,
+      having,
+      productLimit,
+      pageOffset
+    );
+    const filteredCategories = await getFilteredCategories(productName, manufacturers, priceWhere, where, whereLength);
+    const filteredManufacturers = await getFilteredManufacturers(productName, categories, priceWhere, where, whereLength);
 
-    const getMinAndMaxPrice = await Price.findAll({
-      attributes: [
-        [sequelize.fn('min', sequelize.col('grossPrice')), 'minPrice'],
-        [sequelize.fn('max', sequelize.col('grossPrice')), 'maxPrice']
-      ],
-      include: [
-        {
-          model: Product,
-          as: 'Product',
-          attributes: ['productID'],
-          include: [
-            {
-              model: Attribute,
-              as: 'va',
-              attributes: [],
-              where: where
-            },
-            {
-              model: Category,
-              as: 'Category',
-              attributes: [],
-              where: categories.length !== 0 ? { [Op.or]: categories } : {}
-            },
-            {
-              model: Manufacturer,
-              as: 'Manufacturer',
-              attributes: [],
-              where: manufacturers.length !== 0 ? { [Op.or]: manufacturers } : {}
-            }
-          ],
-          where: {
-            productName: { [Op.like]: `%${productName}%` }
-          },
-          group: ['Product.productID'],
-          having: having,
-          subQuery: false
-        }
-      ],
-      raw: true
-    });
+    const requestedAttributes = await getAttributes(productName, categories, manufacturers, priceWhere, where, having);
+    const groupedFilters = groupFilterValues(requestedAttributes);
 
-    const product = await Product.findAll({
-      as: 'Product',
-      attributes: { exclude: ['description', 'categoryID', 'manufacturerID'] },
-      separate: true,
-      include: [
-        {
-          model: Attribute,
-          as: 'va',
-          separate: whereLength > 0 ? false : true,
-          attributes: ['attributeID'],
-          where: where
-        },
-        {
-          model: Attribute,
-          as: 'Attributes',
-          attributes: {
-            exclude: ['productID', 'attributeID', 'type']
-          },
-          separate: true,
-          where: { [Op.or]: [{ type: 1 }, { type: 2 }] }
-        },
-        {
-          model: Category,
-          as: 'Category',
-          where: categories.length !== 0 ? { [Op.or]: categories } : {}
-        },
-        {
-          model: Manufacturer,
-          as: 'Manufacturer',
-          where: manufacturers.length !== 0 ? { [Op.or]: manufacturers } : {}
-        },
-        {
-          model: Price,
-          attributes: { exclude: ['priceID', 'productID', 'taxPercentage', 'fromDate', 'toDate'] },
-          where: priceWhere
-        }
-      ],
-      where: { productName: { [Op.like]: `%${productName}%` } },
-      group: ['Product.productID'],
-      having: having,
-      order: [sortBy],
-      limit: [productLimit],
-      offset: pageOffset > getNumberOfProducts.length ? 0 : pageOffset,
-      subQuery: true
-    });
+    const [minPrice, maxPrice] = await getMinAndMaxPrice(productName, categories, manufacturers, where, having);
 
-    const category = await Category.findAll({
-      as: 'Category',
-      attributes: [
-        'categoryName',
-        'categoryID',
-        [sequelize.fn('COUNT', sequelize.col('Product.productID')), 'numberOfProducts']
-      ],
-      include: [
-        {
-          model: Product,
-          as: 'Product',
-          attributes: [],
-          include: [
-            {
-              model: Manufacturer,
-              as: 'Manufacturer',
-              where: manufacturers.length !== 0 ? { [Op.or]: manufacturers } : {}
-            },
-            {
-              model: Attribute,
-              as: 'va',
-              separate: whereLength > 0 ? false : true,
-              attributes: [],
-              where: where
-            },
-            {
-              model: Price,
-              attributes: [],
-              where: priceWhere
-            }
-          ],
-          where: { productName: { [Op.like]: `%${productName}%` } }
-        }
-      ],
-      group: ['categoryName']
-    });
-
-    const manufacturer = await Manufacturer.findAll({
-      as: 'Manufacturer',
-      attributes: [
-        'ManufacturerName',
-        'ManufacturerID',
-        [sequelize.fn('COUNT', sequelize.col('Product.productID')), 'numberOfProducts']
-      ],
-      include: [
-        {
-          model: Product,
-          as: 'Product',
-          attributes: [],
-          include: [
-            {
-              model: Category,
-              as: 'Category',
-              where: categories.length !== 0 ? { [Op.or]: categories } : {}
-            },
-            {
-              model: Attribute,
-              as: 'va',
-              separate: whereLength > 0 ? false : true,
-              attributes: [],
-              where: where
-            },
-            {
-              model: Price,
-              attributes: [],
-              where: priceWhere
-            }
-          ],
-          where: { productName: { [Op.like]: `%${productName}%` } }
-        }
-      ],
-      group: ['ManufacturerName']
-    });
-
-    const attribute = await Attribute.findAll({
-      attributes: [
-        'property',
-        'value',
-        [sequelize.literal('COUNT(DISTINCT Attribute.attributeID)'), 'numberOfProducts']
-      ],
-      include: [
-        {
-          model: Product,
-          as: 'Product',
-          attributes: ['productID'],
-          group: ['productID'],
-          include: [
-            {
-              model: Category,
-              as: 'Category',
-              attributes: [],
-              where: categories.length !== 0 ? { [Op.or]: categories } : {}
-            },
-            {
-              model: Manufacturer,
-              as: 'Manufacturer',
-              attributes: [],
-              where: manufacturers.length !== 0 ? { [Op.or]: manufacturers } : {}
-            },
-            {
-              model: Attribute,
-              as: 'va',
-              separate: whereLength > 0 ? false : true,
-              attributes: ['attributeID'],
-              where: where
-            },
-            {
-              model: Price,
-              attributes: [],
-              where: priceWhere
-            }
-          ],
-          where: { productName: { [Op.like]: `%${productName}%` } }
-        }
-      ],
-      where: { [Op.or]: [{ type: 1 }, { type: 0 }] },
-      group: ['value', 'property'],
-      order: ['property'],
-      subQuery: false,
-      distinct: true
-    });
-
-    const numberOfProducts = getNumberOfProducts.length;
-    const minPrice = getMinAndMaxPrice[0].minPrice;
-    const maxPrice = getMinAndMaxPrice[0].maxPrice;
+    const numberOfProducts = await getNumberOfProducts(productName, categories, manufacturers, priceWhere, where, having);
     const NumberOfpages = Math.ceil(numberOfProducts / productLimit);
     const activePage = pageOffset > getNumberOfProducts.length ? 1 : pageOffset / productLimit + 1;
-    const groupedFilters = groupFilterValues(attribute);
+
     return {
       status: 200,
       data: {
-        products: product,
+        products: filteredProducts,
         filters: groupedFilters,
-        categories: category,
-        manufacturers: manufacturer,
+        categories: filteredCategories,
+        manufacturers: filteredManufacturers,
         numberOfProducts: numberOfProducts,
         activePage: activePage,
         NumberOfpages: NumberOfpages,
@@ -338,17 +109,12 @@ const getProductHints = async (productName) => {
     const product = await Product.findAll({
       as: 'Product',
       attributes: { exclude: ['description', 'categoryID', 'manufacturerID', 'quantity'] },
-      where: { productName: { [Op.like]: `%${productName}%` } }
+      where: { productName: { [Op.like]: `%${productName}%` } },
+      limit: 5
     });
-    return {
-      status: 200,
-      data: {
-        product
-      },
-      message: 'Product hints retrieved.'
-    };
+    return { status: 200, data: { product }, message: 'Product hints retrieved.' };
   } catch (e) {
-    return { status: 500, data: [], message: e.message };
+    return { status: 500, data: null, message: e.message };
   }
 };
 
@@ -361,7 +127,7 @@ const getFrontPageProducts = async () => {
     const dailyPromoProduct = await getDailyPromoProduct();
     const weeklyPromoProduct = await getWeeklyPromoProduct();
 
-    const products = await {
+    const products = {
       youMayLikeProducts: likedProducts ? likedProducts : null,
       mostBoughtCategoryProducts: categoryProducts ? categoryProducts : null,
       mostBoughtProducts: boughtProducts ? boughtProducts : null,
@@ -371,7 +137,7 @@ const getFrontPageProducts = async () => {
     };
     return { status: 200, data: products, message: 'Products retrieved.' };
   } catch (e) {
-    return { status: 500, data: [], message: e.message };
+    return { status: 500, data: null, message: e.message };
   }
 };
 

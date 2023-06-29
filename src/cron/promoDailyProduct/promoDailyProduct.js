@@ -16,7 +16,7 @@ module.exports = promoDailyProduct = async () => {
     const price = await Price.create(
       {
         productID: product.productID,
-        netPrice: product.Prices[0].grossPrice * 0.8 * 0.77,
+        netPrice: (product.Prices[0].grossPrice * 0.8) / 1.23,
         grossPrice: product.Prices[0].grossPrice * 0.8,
         taxPercentage: 23,
         fromDate: new Date(),

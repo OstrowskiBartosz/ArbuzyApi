@@ -1,7 +1,7 @@
 const db = require('../models');
 const { User } = db;
 const bcrypt = require('bcrypt');
-const checkUserLogged = require('../util/checkUserLogged');
+const checkUserLogged = require('../util/user/checkUserLogged');
 
 const createSession = async (session, login, password) => {
   try {

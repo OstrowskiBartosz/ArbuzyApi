@@ -1,4 +1,4 @@
-const db = require('../models');
+const db = require('../../models');
 const { User } = db;
 
 module.exports = checkUserLogged = async (userSession, transaction) => {

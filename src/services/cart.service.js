@@ -1,6 +1,6 @@
 const db = require('../models');
 const { Cart, CartItem } = db;
-const checkUserLogged = require('../util/checkUserLogged');
+const checkUserLogged = require('../util/user/checkUserLogged');
 const checkCartPrice = require('../util/cart/checkCartPrice');
 const shoppingCartData = require('../util/cartItem/shoppingCartData');
 
