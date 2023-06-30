@@ -1,7 +1,8 @@
-const generatePasswordHash = require('../util/user/generatePasswordHash');
 const db = require('../models');
 const { User } = db;
+const { Op } = require('sequelize');
 const checkUserLogged = require('../util/user/checkUserLogged');
+const createNewUser = require('../util/user/createNewUser');
 
 const getUser = async (userSession) => {
   try {
@@ -28,32 +29,20 @@ const createUser = async (userData, session) => {
     const transaction = await db.sequelize.transaction();
     const { login, email } = userData;
     const findUser = await User.findOne({
-      where: { login: login, email: email },
+      where: { [Op.or]: [{ login: login }, { email: email }] },
       transaction: transaction
     });
-
     if (findUser === null) {
-      const user = await User.create(
-        {
-          login: userData.login,
-          password: await generatePasswordHash(userData.password),
-          email: userData.email,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          phoneNumber: userData.phoneNumber,
-          cityName: userData.cityName,
-          streetName: userData.streetName,
-          ZIPCode: `${userData.ZIPCode.slice(0, 2)}-${userData.ZIPCode.slice(2)}`,
-          userType: 1,
-          NIPNumber: userData.NIPNumber !== '' ? userData.NIPNumber : null,
-          companyName: userData.companyName !== '' ? userData.companyName : null
-        },
-        { transaction: transaction }
-      );
-      session.login = login;
-      session.save();
-      transaction.commit();
-      return { status: 200, data: null, message: 'signedup' };
+      const user = await createNewUser(userData, transaction);
+      if (user) {
+        session.login = login;
+        session.save();
+        transaction.commit();
+        return { status: 200, data: null, message: 'User has been signed up.' };
+      } else {
+        transaction.rollback();
+        return { status: 200, data: null, message: 'Error creating new user.' };
+      }
     } else {
       transaction.rollback();
       return { status: 200, data: null, message: 'User with that login or email already exists.' };

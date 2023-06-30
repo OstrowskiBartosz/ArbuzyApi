@@ -40,7 +40,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(6),
         allowNull: false,
         validate: {
-          is: /^[0-9-]{6}$/i
+          is: /^[0-9-]{3,6}$/i
         }
       },
       userType: {
