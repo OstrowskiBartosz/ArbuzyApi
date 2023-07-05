@@ -107,12 +107,11 @@ const getProducts = async (productName, query, url) => {
 const getProductHints = async (productName) => {
   try {
     const product = await Product.findAll({
-      as: 'Product',
       attributes: { exclude: ['description', 'categoryID', 'manufacturerID', 'quantity'] },
       where: { productName: { [Op.like]: `%${productName}%` } },
       limit: 5
     });
-    return { status: 200, data: { product }, message: 'Product hints retrieved.' };
+    return { status: 200, data: product, message: 'Product hints retrieved.' };
   } catch (e) {
     return { status: 500, data: null, message: e.message };
   }
