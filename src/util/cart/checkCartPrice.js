@@ -4,7 +4,7 @@ const checkCurrentProductPrice = require('../cartItem/checkCurrentProductPrice')
 
 const financial = (string) => Number.parseFloat(string).toFixed(2);
 
-module.exports = checkCartPrice = async (cart, cartItems, transaction) => {
+module.exports = checkCartPrice = async (cart, cartItems, user, transaction) => {
   let totalPriceOfProducts = 0;
   cartItems.forEach((cartItem) => {
     const productPrice = checkCurrentProductPrice(cartItem.Product);
@@ -16,7 +16,6 @@ module.exports = checkCartPrice = async (cart, cartItems, transaction) => {
       { totalPriceOfProducts: totalPriceOfProducts },
       { where: { userID: user.userID }, transaction: transaction }
     );
-
     const cartData = await Cart.findOne({
       attributes: { exclude: ['userID'] },
       where: { userID: user.userID },

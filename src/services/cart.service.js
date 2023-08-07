@@ -35,7 +35,7 @@ const getCart = async (userSession) => {
     });
 
     const shoppingCart = await shoppingCartData(cart.cartID, transaction);
-    const cartData = await checkCartPrice(cart, shoppingCart, transaction);
+    const cartData = await checkCartPrice(cart, shoppingCart, user, transaction);
 
     await transaction.commit();
     return { status: 200, data: { cartData: cartData, cartItemsData: shoppingCart }, message: 'Success.' };
