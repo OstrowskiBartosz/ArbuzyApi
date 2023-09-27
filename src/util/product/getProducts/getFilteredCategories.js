@@ -10,6 +10,7 @@ module.exports = getFilteredCategories = async (productName, manufacturers, pric
       'categoryID',
       [sequelize.fn('COUNT', sequelize.col('Product.productID')), 'numberOfProducts']
     ],
+    distinct: true,
     include: [
       {
         model: Product,
@@ -30,6 +31,7 @@ module.exports = getFilteredCategories = async (productName, manufacturers, pric
           },
           {
             model: Price,
+            separate: priceWhere?.grossPrice ? false : true,
             attributes: [],
             where: priceWhere
           }
@@ -39,6 +41,9 @@ module.exports = getFilteredCategories = async (productName, manufacturers, pric
     ],
     group: ['categoryName']
   });
+  console.log({ priceWhere });
+  console.log(priceWhere);
+  console.log({ where });
 
   return categories;
 };

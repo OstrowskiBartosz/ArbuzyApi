@@ -30,6 +30,7 @@ module.exports = getFilteredManufacturers = async (productName, categories, pric
           },
           {
             model: Price,
+            separate: priceWhere?.grossPrice ? false : true,
             attributes: [],
             where: priceWhere
           }
