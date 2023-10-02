@@ -7,11 +7,11 @@ module.exports = getFilteredProducts = async (
   categories,
   manufacturers,
   priceWhere,
-  where,
-  whereLength,
+  attrWhere,
   having,
   productLimit,
-  pageOffset
+  productOffset,
+  numberOfProducts
 ) => {
   const products = await Product.findAll({
     as: 'Product',
@@ -21,9 +21,9 @@ module.exports = getFilteredProducts = async (
       {
         model: Attribute,
         as: 'va',
-        separate: whereLength > 0 ? false : true,
+        separate: Object.keys(attrWhere).length > 0 ? false : true,
         attributes: ['attributeID'],
-        where: where
+        where: attrWhere
       },
       {
         model: Attribute,
@@ -55,7 +55,7 @@ module.exports = getFilteredProducts = async (
     having: having,
     order: [sortBy],
     limit: [productLimit],
-    offset: pageOffset > getNumberOfProducts.length ? 0 : pageOffset,
+    offset: productOffset > numberOfProducts ? 0 : productOffset,
     subQuery: true
   });
 

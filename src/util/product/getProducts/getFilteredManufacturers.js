@@ -2,7 +2,7 @@ const db = require('../../../models');
 const { Product, Manufacturer, Attribute, Price, Category, sequelize } = db;
 const { Op } = require('sequelize');
 
-module.exports = getFilteredManufacturers = async (productName, categories, priceWhere, where, whereLength) => {
+module.exports = getFilteredManufacturers = async (productName, categories, priceWhere, attrWhere) => {
   const manufacturers = await Manufacturer.findAll({
     as: 'Manufacturer',
     attributes: [
@@ -24,9 +24,9 @@ module.exports = getFilteredManufacturers = async (productName, categories, pric
           {
             model: Attribute,
             as: 'va',
-            separate: whereLength > 0 ? false : true,
+            separate: Object.keys(attrWhere).length > 0 ? false : true,
             attributes: [],
-            where: where
+            where: attrWhere
           },
           {
             model: Price,

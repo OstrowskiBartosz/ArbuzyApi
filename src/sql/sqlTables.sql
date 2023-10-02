@@ -1,4 +1,5 @@
 SET NAMES utf8;
+SET PERSIST sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
 drop database shop_db1;
 
 create database shop_db1;

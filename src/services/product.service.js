@@ -39,7 +39,7 @@ const getProduct = async (productID) => {
 const getProducts = async (productName, query, url) => {
   try {
     const productLimit = Number(query.l) ? Number(query.l) : 10;
-    const pageOffset = (Number(query.p) ? Number(query.p) - 1 : 0) * productLimit;
+    const productOffset = (Number(query.p) ? Number(query.p) - 1 : 0) * productLimit;
     const sortBy = getProductSorting(query.s);
     const paramsObject = getURLParams(url, productName);
 
@@ -52,37 +52,49 @@ const getProducts = async (productName, query, url) => {
     activeCategories.map((categoryID) => categories.push({ categoryID: categoryID }));
 
     const attributes = getAttributeFilters(paramsObject, productName);
-    const whereLength = attributes.property.length;
-    let where = whereLength > 0 ? attributes : {};
-    let having = whereLength > 1 ? [sequelize.where(sequelize.literal('COUNT(Product.productID)'), '=', whereLength)] : [];
+    let attrWhere = attributes.property.length > 0 ? attributes : {};
+
+    console.log({ attrWhere });
+
+    let having =
+      Object.keys(attrWhere).length > 1
+        ? [sequelize.where(sequelize.literal('COUNT(Product.productID)'), '=', Object.keys(attrWhere.property).length)]
+        : [];
 
     const priceRange = getPriceRange(paramsObject);
     let priceWhere = priceRange.priceFrom
       ? { grossPrice: { [Op.between]: [priceRange.priceFrom, priceRange.priceTo] } }
       : {};
 
+    const requestedAttributes = await getAttributes(productName, categories, manufacturers, priceWhere, attrWhere, having);
+    const groupedFilters = groupFilterValues(requestedAttributes);
+
+    const [minPrice, maxPrice] = await getMinAndMaxPrice(productName, categories, manufacturers, attrWhere, having);
+
+    const numberOfProducts = await getNumberOfProducts(
+      productName,
+      categories,
+      manufacturers,
+      priceWhere,
+      attrWhere,
+      having
+    );
+    const NumberOfpages = Math.ceil(numberOfProducts / productLimit);
+    const activePage = productOffset > numberOfProducts ? 1 : productOffset / productLimit + 1;
+
+    const filteredCategories = await getFilteredCategories(productName, manufacturers, priceWhere, attrWhere);
+    const filteredManufacturers = await getFilteredManufacturers(productName, categories, priceWhere, attrWhere);
     const filteredProducts = await getFilteredProducts(
       productName,
       categories,
       manufacturers,
       priceWhere,
-      where,
-      whereLength,
+      attrWhere,
       having,
       productLimit,
-      pageOffset
+      productOffset,
+      numberOfProducts
     );
-    const filteredCategories = await getFilteredCategories(productName, manufacturers, priceWhere, where, whereLength);
-    const filteredManufacturers = await getFilteredManufacturers(productName, categories, priceWhere, where, whereLength);
-
-    const requestedAttributes = await getAttributes(productName, categories, manufacturers, priceWhere, where, having);
-    const groupedFilters = groupFilterValues(requestedAttributes);
-
-    const [minPrice, maxPrice] = await getMinAndMaxPrice(productName, categories, manufacturers, where, having);
-
-    const numberOfProducts = await getNumberOfProducts(productName, categories, manufacturers, priceWhere, where, having);
-    const NumberOfpages = Math.ceil(numberOfProducts / productLimit);
-    const activePage = pageOffset > getNumberOfProducts.length ? 1 : pageOffset / productLimit + 1;
 
     return {
       status: 200,
